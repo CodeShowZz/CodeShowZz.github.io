@@ -1,0 +1,468 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+  <title>对数据权限实现的思考 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="对数据权限实现的思考">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-10 02:58" pubdate>
+        2021年6月10日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1.6k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      17
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">对数据权限实现的思考</h1>
+            
+            <div class="markdown-body">
+              <h2 id="对数据权限实现的思考"><a href="#对数据权限实现的思考" class="headerlink" title="对数据权限实现的思考"></a>对数据权限实现的思考</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>之前在公司做项目的时候,有这么一个需求,需要在现有的系统的某些表上加上数据权限功能.每个用户都有一个角色id,现在要使得相同的角色id可以查询相同的数据,超级管理员的id为1,这个角色可以查询所有的数据.</p>
+<h3 id="从简单做起"><a href="#从简单做起" class="headerlink" title="从简单做起"></a>从简单做起</h3><p>对数据库的操作无非就是CRUD,既然要实现数据权限,那么最简单的方式就是在表里面新增一个roleId字段,然后把它当成一个业务字段来做CRUD,这样非常简单.但是这样会使人有点烦躁,为了实现这个功能,就要将该字段不断的在系统间传递,这样是不是挺麻烦的?</p>
+<h3 id="使roleId传递更方便"><a href="#使roleId传递更方便" class="headerlink" title="使roleId传递更方便"></a>使roleId传递更方便</h3><p>我们的系统有一个和前端打交道的web模块,web模块将调用其余业务模块来进行业务处理.我之前实现这个功能的时候,在Web层实现了一个切面,这个切面是切在对业务模块的调用上,也就是web模块的出口处,因为之前接口方法都满足一定的规范,所以切点就比较通用,然后切面所做的事情就是从Session中取出roleId,然后判断调用的方法参数中是否有roleId字段(通过反射),有则将roleId设置进去,这样roleId就可以自动的进行传递了.</p>
+<p>在业务模块中,也实现一个切面,切点为业务模块的入口处,因为web模块已经设置了roleId,那么我们现在取roleId的目的是为了将roleId保存起来,到Dao层再对sql执行进行拦截,同样检测一下是否字段有roleId,有则将roleId设置进去.在我的实现中,我是使用ThreadLocal来保存入口处的roleId,在拦截器中从ThreadLocal中获取roleId,如果方法参数中有roleId这个字段,则设置进去.</p>
+<p>整个系统其实有三个切面,一个是web模块的切面,一个是业务模块入口的切面,最后一个是sql拦截器(这个也当成一个切面).</p>
+<p>说了这么多,其实无非就是解决roleId如何在系统间传递的问题.但是现在想起来,之前这么做是有点武断的.因为需要做数据权限的表也只是少数,不是所有的调用方法都应该拦截,这样可能会对系统的响应时间造成影响.所以现在想想,如果要改进这个问题,可以自定义一个注解,然后在需要获取或者设置roleId的方法上加上注解,把切点变成基于注解的拦截.这样和直接在系统中直接传递roleId比起来,我也不知道是不是把问题搞复杂了,本来在系统间就是要传递各种数据的,大费周章搞这些切面干什么.如果再让我实现一次,我觉得还是直接在系统间传递roleId好了,除非代码太复杂,直接传递roleId不大可行,我觉得通过切面来传递才有好处.</p>
+<h3 id="SQL改造"><a href="#SQL改造" class="headerlink" title="SQL改造"></a>SQL改造</h3><p>在我的实现中,我还对查询语句做了一个sql改造,现在想起来感觉是有点画蛇添足了,但是还是想表达表达.假如有这么一条sql:<code>select id,name from student where id = #&#123;id&#125;</code>,假如在不修改这句sql的前提下,如何将其改成是带有roleId的查询呢?思路是这样的,用拦截器拦截原sql,在外面再嵌套一层sql,形如<code>select * from (原sql) where roleId = #&#123;roleId&#125;</code>,当然原sql的查询字段上要包含roleId字段,这样的话对于大多数sql都是通用的.但是为什么不直接在sql语句中(用的是mybatis)直接加上<code>roleId = #&#123;roleId&#125;</code>呢?因为之前一个表里面可能有多个sql查询语句,且查询的字段使用了mybatis的<code>&lt;sql&gt;&lt;/sql&gt;</code>和<code>&lt;include&gt;&lt;/include&gt;</code>来复用,所以只要在<code>&lt;sql&gt;&lt;/sql&gt;</code>间再加入一个roleId字段,就可以通过上面的方式来简单的改造SQL语句了.现在想想,除非对某个表的查询语句太多(一般不会),否则直接在原sql上加入查询条件或许更好,首先第一点改造的只是查询,其它的数据库操作还是要对原sql进行改造,并且改造查询给系统也带来了复杂性,可能这种改造对复杂sql还不一定适用.</p>
+<h3 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h3><p>在这里总结一下整个流程:</p>
+<ol>
+<li>从web层的session中获取roleId,设置到web层调用业务层的对象上(如果有roleId)</li>
+<li>获取业务层入口方法的方法参数,将roleId设置在ThreadLocal中.</li>
+<li>数据库操作时,使用拦截器将ThreadLocal中的roleId设置到方法参数上.</li>
+<li>如果是查询操作,拦截器改造原sql.</li>
+</ol>
+<p>这里还要强调一下,在我的实现中,查询在原sql的查询字段上加入roleId即可,其余操作仍然需要修改sql语句.</p>
+<p>另外,在三个切面中,可以选择通过规范的方法名称来实现切点,也可以使用基于注解的方式来实现切点,前者比较通用但多了很多不必要的判断,后者需要我们指定拦截的地方,少了不必要的判断却增加了一些开发量.</p>
+<h3 id="形成组件"><a href="#形成组件" class="headerlink" title="形成组件"></a>形成组件</h3><p>在我的实现中,因为关于roleId的切面、注解、拦截器是通用的,所以我将它们全部都放在了一个新的项目中,形成一个组件,然后让业务模块依赖它.</p>
+<h3 id="Talk-is-cheap-show-me-the-code"><a href="#Talk-is-cheap-show-me-the-code" class="headerlink" title="Talk is cheap,show me the code"></a>Talk is cheap,show me the code</h3><p>俗话说得好,没有代码你说个XX.之前在公司做这个功能的时候,可能一股脑就想着简化,现在想起来觉得不能为了简化而简化,现在我觉得这个数据权限的思路可以记录下来,但是要让我再实现它一次觉得已经没有动力了,所以就不再想写代码了.(好吧,我承认再实现一遍有点折磨人😭)</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%9D%83%E9%99%90/">数据权限</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%95%B0%E6%8D%AE%E6%9D%83%E9%99%90/"> 数据权限</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/10/%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90%E5%AE%9E%E7%8E%B0/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">基于注解的动态数据源实现</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/08/ABTest%E5%88%86%E6%B5%81%E7%AE%97%E6%B3%95%E8%AE%BE%E8%AE%A1/">
+                        <span class="hidden-mobile">ABTest分流算法设计与实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

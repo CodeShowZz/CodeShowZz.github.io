@@ -1,0 +1,503 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+  <title>ABTest分流算法设计与实现 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="ABTest分流算法设计与实现">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-08 22:14" pubdate>
+        2021年6月8日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      26
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ABTest分流算法设计与实现</h1>
+            
+            <div class="markdown-body">
+              <h2 id="ABTest分流算法设计与实现"><a href="#ABTest分流算法设计与实现" class="headerlink" title="ABTest分流算法设计与实现"></a>ABTest分流算法设计与实现</h2><h3 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h3><p>有这么一个需求,我们需要建立一个实验,实验有一个实验名称.实验下面有多个分组,每个分组也有个分组名称.当我们创建一个实验的时候,需要同时建立一个或多个分组,并且每个分组都有一个百分比的属性,代表当我们进入一个实验的时候,选择某个分组的可能性有多大,所有的分组的百分比之和为100%.</p>
+<h3 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h3><p>通过实现实验和分组,我们可以把它应用在分流策略中,比如ABTest.考虑这样一个场景,我们要对比三个推荐算法带来的效益,此时我们会给这三个推荐算法分配一定的比例,然后让每次推荐都按这个比例来执行不同的算法,最终再根据一定的换算来统计算法带来的效益.</p>
+<h3 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h3><p>我们可以将分组的百分比看成是几条线段,假如总共有100米长,每条线段有一定的长度,我们根据标识(比如hashCode)来对100取模,最终这个数字一定会落在某一条线段上,也就是某个分组上.在我的实现中,将以1000作为模.在这里,我将使用Java语言实现一个简单的分流算法.</p>
+<p>完整代码地址为:<a target="_blank" rel="noopener" href="https://github.com/CodeShowZz/abtest">https://github.com/CodeShowZz/abtest</a>,所有的接口都进行了初步的测试.</p>
+<h4 id="步骤一-定义模型"><a href="#步骤一-定义模型" class="headerlink" title="步骤一:定义模型"></a>步骤一:定义模型</h4><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs php"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Lab</span> </span>&#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> key;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> name;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">List</span>&lt;Group&gt; groupList;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Group</span> &#123;</span><br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> key;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> name;<br>    <br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">    *  百分比</span><br><span class="hljs-comment">    **/</span><br>    <span class="hljs-keyword">private</span> BigDecimal ratio;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 分组的开始位置</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> start;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 分组的结束位置</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">int</span> <span class="hljs-built_in">end</span>;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="步骤二-实现分流工具类"><a href="#步骤二-实现分流工具类" class="headerlink" title="步骤二:实现分流工具类"></a>步骤二:实现分流工具类</h4><p>这里要实现一个工具类,能够将百分比转换成区间.</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-built_in">public</span> static <span class="hljs-type">void</span> assignRangeByRatio(Lab lab) &#123;<br>       List&lt;<span class="hljs-keyword">Group</span>&gt; groupList = lab.getGroupList();<br>       <span class="hljs-type">int</span> <span class="hljs-keyword">current</span> = <span class="hljs-number">0</span>;<br>       <span class="hljs-keyword">for</span> (<span class="hljs-keyword">Group</span> <span class="hljs-keyword">group</span> : groupList) &#123;<br>           BigDecimal ratio = <span class="hljs-keyword">group</span>.getRatio();<br>           <span class="hljs-type">int</span> count = ratio.multiply(range).setScale(<span class="hljs-number">0</span>, RoundingMode.HALF_UP).intValue();<br>           <span class="hljs-type">int</span> start = <span class="hljs-keyword">current</span>;<br>           <span class="hljs-type">int</span> end = <span class="hljs-keyword">current</span> + count - <span class="hljs-number">1</span>;<br>           <span class="hljs-keyword">group</span>.setStart(<span class="hljs-keyword">start</span>);<br>           <span class="hljs-keyword">group</span>.setEnd(<span class="hljs-keyword">end</span>);<br>           <span class="hljs-keyword">current</span> = <span class="hljs-keyword">end</span> + <span class="hljs-number">1</span>;<br>       &#125;<br>   &#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="步骤三-获取标识取Hash-将其分配到某个分组中"><a href="#步骤三-获取标识取Hash-将其分配到某个分组中" class="headerlink" title="步骤三:获取标识取Hash,将其分配到某个分组中."></a>步骤三:获取标识取Hash,将其分配到某个分组中.</h4><p>在我的实现中,如果两次传入的标识key是一样的,那么计算出来的分组位置也是一样的.所以使用这个Hash算法时,可能要根据具体的应用场景来取一个具体的key,比如对于一个用户来说,取值如果要和上次相同,那么可以使用用户id来作为key,如果取值要随机,那么可以取时间戳或者其它属性作为key.</p>
+<p>这里我的Hash算法借鉴(可以说是照抄)了HashMap中的Hash算法.</p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs reasonml">public static final <span class="hljs-built_in">int</span> hash<span class="hljs-constructor">Code(String <span class="hljs-params">key</span>, String <span class="hljs-params">value</span>)</span> &#123;<br>       return <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Math</span>.</span></span>abs(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Objects</span>.</span></span>hash<span class="hljs-constructor">Code(<span class="hljs-params">key</span>)</span> ^ <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Objects</span>.</span></span>hash<span class="hljs-constructor">Code(<span class="hljs-params">value</span>)</span>);<br>   &#125;<br></code></pre></td></tr></table></figure>
+<p>接着,使用上面的模型并且结合Hash算法来实现分组.分区函数的返回结果就是某一个分组.</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs routeros">public static<span class="hljs-built_in"> Group </span>partition(String key, Lab lab) &#123;<br>    int hashCode = hashCode(key, lab.getName());<br>    int position = hashCode % range.intValue();<br>    List&lt;Group&gt; groupList = lab.getGroupList();<br>    <span class="hljs-keyword">for</span> (Group<span class="hljs-built_in"> group </span>: groupList) &#123;<br>        <span class="hljs-keyword">if</span> (group.getStart() &lt;= position &amp;&amp; group.getEnd() &gt;= position) &#123;<br>            return group;<br>        &#125;<br>    &#125;<br>    return <span class="hljs-literal">null</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+<h4 id="步骤四-测试"><a href="#步骤四-测试" class="headerlink" title="步骤四:测试"></a>步骤四:测试</h4><p>通过上面的三个步骤,一个简单的分流算法实现完成.现在我们来假设这样一个场景:据统计,50%的人喜欢数学,30%的人喜欢语文,20%的人喜欢英语,那么现在我们随便找一个人,来猜测它喜欢哪个科目,那么我们就可以使用上面的程序,测试程序如下.</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs routeros">public static void main(String[] args) &#123;<br>        Lab subject = new Lab();<br>       <span class="hljs-built_in"> Group </span>math = new Group();<br>        math.setRatio(new BigDecimal(0.5));<br>        math.setKey(<span class="hljs-string">&quot;math&quot;</span>);<br>        math.setName(<span class="hljs-string">&quot;数学&quot;</span>);<br><br>       <span class="hljs-built_in"> Group </span>chinese = new Group();<br>        chinese.setRatio(new BigDecimal(0.3));<br>        chinese.setKey(<span class="hljs-string">&quot;chinese&quot;</span>);<br>        chinese.setName(<span class="hljs-string">&quot;语文&quot;</span>);<br><br>       <span class="hljs-built_in"> Group </span>english = new Group();<br>        english.setRatio(new BigDecimal(0.2));<br>        english.setKey(<span class="hljs-string">&quot;english&quot;</span>);<br>        english.setName(<span class="hljs-string">&quot;英语&quot;</span>);<br><br>        List&lt;Group&gt; groupList = Arrays.asList(math, chinese, english);<br>        subject.setGroupList(groupList);<br>        subject.setKey(<span class="hljs-string">&quot;subject&quot;</span>);<br>        subject.setName(<span class="hljs-string">&quot;学科&quot;</span>);<br><br>        SplitFlowUtil.splitFlow(subject);<br><br>       <span class="hljs-built_in"> Group </span>res = partition(<span class="hljs-string">&quot;the boy maybe like math&quot;</span>, subject);<br>        System.out.println(res);<br><br>        res = partition(<span class="hljs-string">&quot;i am a programmer&quot;</span>, subject);<br>        System.out.println(res);<br>    &#125;<br><br></code></pre></td></tr></table></figure>
+
+<h3 id="继续思考"><a href="#继续思考" class="headerlink" title="继续思考"></a>继续思考</h3><p>很明显,上面的这个程序其实算是一个通用程序,如果设计的算法更加的快捷,API接口更加易用,它完全可以作为一个公司内部的服务来提供给别人调用.所以现在我们要思考如何将它改进成一个公司内部可以使用的程序.</p>
+<h4 id="改进一-建立微服务"><a href="#改进一-建立微服务" class="headerlink" title="改进一:建立微服务"></a>改进一:建立微服务</h4><p>提供添加、更新、删除、查询、分流五个接口来对实验进行操作,在这里使用Restful接口来提供这项服务.</p>
+<h4 id="改进二-将模型数据存储到Mysql"><a href="#改进二-将模型数据存储到Mysql" class="headerlink" title="改进二:将模型数据存储到Mysql"></a>改进二:将模型数据存储到Mysql</h4><p>上面的测试程序只是在本地构造程序,我们可以将模型数据映射成表,然后存储到数据库中,然后通过UI界面来进行CRUD,这一点很容易就可以做到,不再赘述.</p>
+<h4 id="改进三-引入Zookeeper"><a href="#改进三-引入Zookeeper" class="headerlink" title="改进三:引入Zookeeper"></a>改进三:引入Zookeeper</h4><p>很明显,既然要在公司内部使用,那么要保证每个实验都是隶属于某个项目的,首先要保证实验的唯一性,而这又能看出有很明显的层级结构,所以可以引入Zookeeper来存储这些模型数据,而上面的Mysql则用于冗余模型数据.</p>
+<h3 id="开始第一次改进"><a href="#开始第一次改进" class="headerlink" title="开始第一次改进"></a>开始第一次改进</h3><p>先列一下实现上述改进所要引入的一些技术,其中改进二不在本次实现考虑范围.另外在下文中可能不会提供所有的代码,完整的代码将在最后给出Github仓库地址.</p>
+<ul>
+<li>序列化框架:Kryo,用于序列化模型数据并将其存储到Zookeeper上</li>
+<li>微服务框架:Spring Boot,用于实现一个微服务并提供Restful接口</li>
+<li>分布式协调框架:Zookeeper及其API,用于实现模型数据的保存,并形成目录结构.</li>
+</ul>
+<h4 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h4><p>在工程中实现对zookeeper api的调用,主要考虑的操作有4种</p>
+<ul>
+<li>节点增加</li>
+<li>节点更新</li>
+<li>节点删除</li>
+<li>节点数据查询</li>
+</ul>
+<p>出于更新的复杂性,调用方可能修改实验名称、分组名称以及分组的属性,所以在真正实现中,将使用节点删除加上节点增加来实现节点更新.在这里将不会讨论Zookeeper API的细节,假设读者已经对此有一定的了解和经验.</p>
+<h4 id="Spring-Boot"><a href="#Spring-Boot" class="headerlink" title="Spring Boot"></a>Spring Boot</h4><p>构建一个Spring Boot服务是非常简单的,和上述的Zookeeper类似,我们将对外提供几个api供外部接口调用.</p>
+<ul>
+<li>实验创建 </li>
+<li>实验更新</li>
+<li>实验删除</li>
+<li>实验查询</li>
+<li>根据实验名称进行分流</li>
+</ul>
+<p>API如下所示</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><code class="hljs typescript"><span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 创建实验</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">lab</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@RequestMapping</span>(value = <span class="hljs-string">&quot;/create&quot;</span>, method = RequestMethod.POST)<br>  <span class="hljs-keyword">public</span> <span class="hljs-built_in">boolean</span> <span class="hljs-function"><span class="hljs-title">create</span>(<span class="hljs-params"><span class="hljs-meta">@RequestBody</span> Lab lab</span>)</span> &#123;<br>      <span class="hljs-keyword">return</span> labService.create(lab);<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 根据projectKey和labKey删除实验</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">lab</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@RequestMapping</span>(value = <span class="hljs-string">&quot;/delete&quot;</span>, method = RequestMethod.POST)<br>  <span class="hljs-keyword">public</span> <span class="hljs-built_in">boolean</span> <span class="hljs-function"><span class="hljs-title">delete</span>(<span class="hljs-params"><span class="hljs-meta">@RequestBody</span> Lab lab</span>)</span> &#123;<br>      <span class="hljs-keyword">return</span> labService.delete(lab);<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 根据projectKey和labKey查询实验下的分组</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">projectKey</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">labKey</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@RequestMapping</span>(value = <span class="hljs-string">&quot;/query&quot;</span>, method = RequestMethod.GET)<br>  <span class="hljs-keyword">public</span> List&lt;Group&gt; <span class="hljs-function"><span class="hljs-title">query</span>(<span class="hljs-params"><span class="hljs-meta">@RequestParam</span> <span class="hljs-built_in">String</span> projectKey, <span class="hljs-meta">@RequestParam</span> <span class="hljs-built_in">String</span> labKey</span>)</span> &#123;<br>      <span class="hljs-keyword">return</span> labService.query(projectKey,labKey);<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 根据projectKey和labKey还有identify来进行分流 得到某个分组</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">projectKey</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">labKey</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">identify</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@RequestMapping</span>(value = <span class="hljs-string">&quot;/partition&quot;</span>, method = RequestMethod.GET)<br>  <span class="hljs-keyword">public</span> Group <span class="hljs-function"><span class="hljs-title">partition</span>(<span class="hljs-params"><span class="hljs-meta">@RequestParam</span> <span class="hljs-built_in">String</span> projectKey, <span class="hljs-meta">@RequestParam</span> <span class="hljs-built_in">String</span> labKey,<span class="hljs-meta">@RequestParam</span> <span class="hljs-built_in">String</span> identify</span>)</span> &#123;<br>      <span class="hljs-keyword">return</span> labService.partition(projectKey,labKey,identify);<br>  &#125;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 更新实验</span><br><span class="hljs-comment">   * <span class="hljs-doctag">@param <span class="hljs-variable">lab</span></span></span><br><span class="hljs-comment">   * <span class="hljs-doctag">@return</span></span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-meta">@RequestMapping</span>(value = <span class="hljs-string">&quot;update&quot;</span>,method = RequestMethod.POST)<br>  <span class="hljs-keyword">public</span> <span class="hljs-built_in">boolean</span> <span class="hljs-function"><span class="hljs-title">update</span>(<span class="hljs-params"><span class="hljs-meta">@RequestBody</span> Lab lab</span>)</span> &#123;<br>      <span class="hljs-keyword">return</span> labService.update(lab);<br>  &#125;<br></code></pre></td></tr></table></figure>
+<p>我在模型数据中又引入了几个参数:</p>
+<figure class="highlight arduino"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs arduino"><span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 分流需要的参数,由调用方传入,调用方决定分流所使用的标识</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> identify;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 某个项目的标识,在ZK中是第一级目录,以来区分各个项目的实验</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> projectKey;<br><br>  <span class="hljs-comment">/**</span><br><span class="hljs-comment">   * 在进行更新时,需要传入变更前的实验分组key,以便于删除原来的实验</span><br><span class="hljs-comment">   */</span><br>  <span class="hljs-keyword">private</span> <span class="hljs-keyword">String</span> oldKey;<br></code></pre></td></tr></table></figure>
+<p>这几个参数的作用已经通过注释来表达,这样可以使得服务更加通用和简单.</p>
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>实现完上述的两个改进之后,我们就可以打开PostMan或者其它Http请求工具来对我们提供的接口进行测试了,这里对如何测试不进行展开.</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在这篇文章中,介绍了一个简单的分流算法的设计以及实现,当然程序还存在很多不足之处,比如异常处理,参数校验,又或者是无法实现多层的分流,这都是值得改进的地方,希望以后有机会再进行改进(程序员经常说的一句话就是下次一定😄).</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/abtest/">abtest</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/abtest/">abtest</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/10/%E5%AF%B9%E6%95%B0%E6%8D%AE%E6%9D%83%E9%99%90%E5%AE%9E%E7%8E%B0%E7%9A%84%E6%80%9D%E8%80%83/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">对数据权限实现的思考</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/08/Kafka%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF%E6%9C%89%E5%BA%8F/">
+                        <span class="hidden-mobile">Kafka如何保证发送消息有序</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
