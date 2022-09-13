@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+  <title>运营系统介绍 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>Fluid</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="运营系统介绍">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2021-06-14 00:26" pubdate>
+        2021年6月14日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      20
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">运营系统介绍</h1>
+            
+            <div class="markdown-body">
+              <h2 id="运营系统介绍"><a href="#运营系统介绍" class="headerlink" title="运营系统介绍"></a>运营系统介绍</h2><p>每个公司可能会有这样一个系统,它负责给公司的用户发布一些营销信息,比如通过短信的方式或者通过APP消息的方式来触达用户.那么首先应该要有一个用户标签的概念,用户标签指的是用户的特征,比如用户在最近30天内购买过一个理财产品,通过一个或多个特征,我们可以从一个用户库里面筛选出一部分人出来,我们称它为客群.有了客群,我们还需要营销的信息,比如给用户发短信,发优惠券等各种各样能触达到用户的方式,这类信息叫做触点.最后一点是我们将在什么时候触达用户,这个叫做执行时间.总结起来,运营系统最主要的职责便是在某个时间,向特定的用户发布特定的信息.除此之外,在某一次任务执行完成之后,我们还需要追踪任务的执行情况,以获取最终的运营效果.</p>
+<h3 id="功能点"><a href="#功能点" class="headerlink" title="功能点"></a>功能点</h3><p>当然,每个公司的业务不一样,可能运营系统还会承担其它的一些职责,现在介绍一下我之前参与开发的运营系统的功能.如图:<br><img src="/images/operation_system_introduce_01.png" srcset="/img/loading.gif" lazyload alt="功能架构"></p>
+<h4 id="基础功能"><a href="#基础功能" class="headerlink" title="基础功能"></a>基础功能</h4><p>这一部分主要是建立用户-角色体系,运营系统主要针对的用户不是大众用户,而是服务于公司内部的运营人员.主要由以下几点组成:</p>
+<ul>
+<li>用户</li>
+<li>角色</li>
+<li>权限</li>
+<li>菜单</li>
+<li>定时任务</li>
+</ul>
+<p>在运营系统中,首先需要有用户来操作,接着会给予用户某个角色,通过角色控制用户的权限,比如用户可以看到什么菜单,做什么操作(菜单权限和接口权限).另外,定时任务主要给开发人员配置定时任务,在某个时间点执行某个任务.</p>
+<h4 id="基础配置"><a href="#基础配置" class="headerlink" title="基础配置"></a>基础配置</h4><p>这一部分主要是服务于任务执行的信息,比如客群和标签,这一部分主要对接公司的大数据部门.当然短信配置和消息配置其实也算是基础配置,但从功能点来分的话,就没把它们放到基础配置里面了.另外运营系统还服务于另外一个广告系统,所以这部分还有其它一些配置功能.主要功能如下:</p>
+<p>任务执行相关:</p>
+<ul>
+<li>标签:一个表达式,标识用户的某个特征.</li>
+<li>客群:标签的组合,最终筛选出一批用户.</li>
+</ul>
+<p>广告系统相关:</p>
+<ul>
+<li>运营位:运营位对应APP上的某个广告位.</li>
+<li>素材:素材也就是广告的内容,一般为图片或者文案.</li>
+<li>推广计划:也就是广告,其中会指定广告位置、素材、客群,同时还有其它一些配置,比如推广的时间段,比如指定用户的操作系统类型(只给安卓用户下发某个广告).</li>
+<li>ABTest:主要用户建立实验,进行广告策略的分流.</li>
+<li>账户:创建推广计划时,还需要指定账户,账户会充值一定的金额.当一条广告下发时,将消耗这个账户的一部分金额.</li>
+</ul>
+<h4 id="核心功能"><a href="#核心功能" class="headerlink" title="核心功能"></a>核心功能</h4><p>短信任务和息任务是系统的核心,以这两个触点触达用户.素材自动化也是一个比较核心的功能,以自动化的方式来生成素材,能提升素材的生成效率.</p>
+<ul>
+<li>短信任务:在指定时间,向客群发送短信.</li>
+<li>消息任务:在指定时间,向客群发送消息.</li>
+<li>素材自动化:主要用于自动化生成素材.运营人员自己创建一张图片的成本比较高,如果可以根据用户上传图片的模板信息来组合成一系列的素材,那么素材创建将会更加的高效.</li>
+</ul>
+<h4 id="扩展功能"><a href="#扩展功能" class="headerlink" title="扩展功能"></a>扩展功能</h4><p>这一部分是由其他部分产生的扩展功能.</p>
+<ul>
+<li>任务执行信息:任务执行过程的信息:比如调用短信接口的次数,成功数以及失败数.</li>
+<li>任务监控:主要用于监控任务的执行情况,当任务执行满足一定的条件时(比如任务开始5分钟之内没有执行成功的记录),将会进行任务预警.</li>
+<li>任务预警:主要通过短信和邮件的方式告知开发人员任务执行异常.</li>
+<li>定时清理任务:将超过一定时间点的数据清除(比如半年).</li>
+<li>报表订阅:这个主要和报表功能相关,当用户订阅报表时,将通过邮件发送给用户.</li>
+</ul>
+<h4 id="效果数据"><a href="#效果数据" class="headerlink" title="效果数据"></a>效果数据</h4><p>这一部分主要用于追踪短信和消息以及广告的执行情况,但是这类数据有个很明显的特点,它们不是实时的产生效果数据的,比如一条短信下发之后,可能由于短信运营商或者用户原因(比如停机)导致无法接收到短信,那么就需要追踪一个时间段发送出去的短信,那么就有个问题:通过什么方式来追踪呢?</p>
+<p>在我们的系统中,创建一个短信任务时,将同时为每个短信内容创建一个模板id(通过对接短信平台),也就是短信的唯一标识.发送短信时,只要通过这个标识调用短信平台接口就可以了.除此之外,短信的发送状态一般由短信平台同步到大数据的<code>Hive</code>库中,运营平台需要每天去拉取某个时间段的短信状态信息(比如截止到短信发送后一周,仍然要拉取短信状态信息).</p>
+<p>消息任务的效果追踪和短信是类似的,至于广告,主要对<code>Hive</code>库的广告下发表、广告展示表还有广告点击表的数据进行统计.</p>
+<ul>
+<li>短信任务报表:展示短信最终的效果信息,比如到达量,发送成功量,失败量.</li>
+<li>消息任务报表:展示消息最终的效果信息,比如到达量,发送成功量,失败量.</li>
+<li>广告报表.展示广告下发量、浏览量、点击量等信息.</li>
+</ul>
+<h4 id="形成闭环"><a href="#形成闭环" class="headerlink" title="形成闭环"></a>形成闭环</h4><p>从用户创建任务,到任务执行,再到查看营销结果,整个系统形成了一个闭环,从上面的图中自上而下也能很明显得看出这一点.</p>
+<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><p>在我参与开发的运营系统中,主要用到的技术如下图:<br><img src="/images/operation_system_introduce_02.png" srcset="/img/loading.gif" lazyload alt="技术栈"></p>
+<h3 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h3><p>系统主要分为四个模块:</p>
+<ul>
+<li>web模块</li>
+<li>配置模块</li>
+<li>数据模块</li>
+<li>任务执行模块</li>
+</ul>
+<p>根据模块的职责,各个模块的表情况如下图:<br><img src="/images/operation_system_introduce_03.png" srcset="/img/loading.gif" lazyload alt="数据库"></p>
+<h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><p>运营系统其实大部分流程并不复杂,这里简单的描述一下短信任务的一个流程,复杂性在于要把系统的各个模块串联起来.主要流程描述如下:</p>
+<ol>
+<li>短信任务执行之前,会有短信模板id的生成(在创建任务的时候会生成,还会有定时任务每天重新生成新的模板id)</li>
+<li>拉取任务对应的客群,调用短信接口发送短信</li>
+<li>在任务执行过程中,会记录任务执行的情况(任务发送了多少条短信,调用短信发送接口成功数和失败数).</li>
+<li>每日的短信任务报表的拉取,以此来查看短信最终的触达情况.</li>
+</ol>
+<p>短信任务流程图:<br><img src="/images/operation_system_introduce_04.png" srcset="/img/loading.gif" lazyload alt="短信任务流程"></p>
+<p>再详细一点,短信任务的执行流程图:</p>
+<p><img src="/images/operation_system_introduce_05.png" srcset="/img/loading.gif" lazyload alt="短信任务执行流程"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>这篇文章大致介绍了之前参与开发的运营系统的主要功能,不同的运营系统的设计可能多种多样,需要开发人员发挥想象力,创造更有价值的功能.</p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/06/16/RocketMQ%E9%A1%BA%E5%BA%8F%E6%B6%88%E8%B4%B9/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">RocketMQ顺序消息</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/06/10/%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%8A%A8%E6%80%81%E6%95%B0%E6%8D%AE%E6%BA%90%E5%AE%9E%E7%8E%B0/">
+                        <span class="hidden-mobile">基于注解的动态数据源实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
