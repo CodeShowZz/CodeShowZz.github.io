@@ -270,14 +270,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/%E5%B9%B6%E5%8F%91/</loc>
+    <loc>http://example.com/tags/kafka/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/tags/kafka/</loc>
+    <loc>http://example.com/tags/%E5%B9%B6%E5%8F%91/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -377,14 +377,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/%E5%B9%B6%E5%8F%91/</loc>
+    <loc>http://example.com/categories/kafka/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/kafka/</loc>
+    <loc>http://example.com/categories/%E5%B9%B6%E5%8F%91/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
