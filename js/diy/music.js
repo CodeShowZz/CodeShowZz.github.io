@@ -1,6 +1,6 @@
 const ap = new APlayer({
     container: document.getElementById('aplayer'),
-    fixed: false,
+    fixed: true,
     autoplay: true, //自动播放
     listFolded: false, //列表默认折叠
     mutex: false,
