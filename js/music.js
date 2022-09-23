@@ -4,11 +4,11 @@ const ap = new APlayer({
 	autoplay: true, //自动播放
     audio: [
 	{
-        name: '家后',
-        artist: '江蕙',
-	url:'https://m704.music.126.net/20220924033032/5d107b5db7006cf1b06b8d7c40ab7e64/jdyyaac/005c/545d/045f/76aa00530fc7752e9b6b35b325445622.m4a?authSecret=000001836bbd9e5f04910aaba0b519ac',
-        cover: 'https://p2.music.126.net/nLnXSnnvHt8ovLxbfX5kXA==/89060441862577.jpg?param=130y130'
-    }, 
+        name: "浴室",
+        artist: 'deca joins',
+        url: 'https://m704.music.126.net/20211212133437/6298f876daf4b3a20b984659f71f8968/jdyyaac/000c/560b/5153/7f43625368aa52c4fbb0f968fa2007d2.m4a?authSecret=0000017dad0be60506550aa4681408a0',
+        cover: 'https://p1.music.126.net/byjfkEIOWI_RmxSKEWTPyw==/18910500486297525.jpg?param=200y200',	
+    },
 	]
 });
 
