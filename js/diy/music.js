@@ -7,35 +7,17 @@ const ap = new APlayer({
     mutex: true,
     audio: [
     {
-        name: "浴室",
-        artist: 'deca joins',
-        url: 'http://music.163.com/song/media/outer/url?id=483378334.mp3',
-        cover: 'https://p1.music.126.net/byjfkEIOWI_RmxSKEWTPyw==/18910500486297525.jpg?param=200y200',
+        name: "家后",
+        artist: '江蕙',
+        url: 'https://m704.music.126.net/20220924051333/4874589dd3f17e4f789c88419cb28030/jdyyaac/005c/545d/045f/76aa00530fc7752e9b6b35b325445622.m4a?authSecret=000001836c1bed2e0c0b0aaba0a20bcf',
+        cover: 'https://p1.music.126.net/nLnXSnnvHt8ovLxbfX5kXA==/89060441862577.jpg?param=130y130',
         
-    },
-    {
-        name: "虎口脱险",
-        artist: '老狼--张磊',
-        url: 'https://www.ytmp3.cn/down/39217.mp3',
-        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000004SjPIR07AkG0.jpg?max_age=2592000',
     },
     {
         name: "唯一",
         artist: '告五人',
         url: 'http://www.ytmp3.cn/down/75603.mp3',
         cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000P4Dod0GzRlM.jpg?max_age=2592000',
-    },
-    {
-        name: "我的心里是满的",
-        artist: '程璧',
-        url: 'http://www.ytmp3.cn/down/47442.mp3',
-        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000wnEGB2OnTNh.jpg?max_age=2592000',
-    },
-    {
-        name: "三十岁的女人",
-        artist: '赵雷',
-        url: 'http://music.163.com/song/media/outer/url?id=29567191.mp3',
-        cover: 'https://p2.music.126.net/PJNV84mjt_mDXEkxtjzB4w==/18957779486268444.jpg?param=130y130',
     },
     ]
 });

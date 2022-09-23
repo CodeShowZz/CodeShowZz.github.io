@@ -242,7 +242,7 @@
 
   
   <url>
-    <loc>http://example.com/tags/elastic-search/</loc>
+    <loc>http://example.com/tags/abtest/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -256,14 +256,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/jvm/</loc>
+    <loc>http://example.com/tags/elastic-search/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/tags/abtest/</loc>
+    <loc>http://example.com/tags/jvm/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -349,7 +349,7 @@
 
   
   <url>
-    <loc>http://example.com/categories/elastic-search/</loc>
+    <loc>http://example.com/categories/abtest/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -363,14 +363,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/jvm/</loc>
+    <loc>http://example.com/categories/elastic-search/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/abtest/</loc>
+    <loc>http://example.com/categories/jvm/</loc>
     <lastmod>2022-09-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
