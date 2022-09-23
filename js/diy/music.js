@@ -6,6 +6,12 @@ const ap = new APlayer({
     //lrcType: 3, //歌词传递方式
     mutex: true,
     audio: [
+     {
+        name: "Mine Mine",
+        artist: '周杰伦',
+        url: 'https://dl.stream.qqmusic.qq.com/C400001ZLwSy1zmXVR.m4a?guid=2561414768&vkey=AB0595E8EFF63E66F89B7BCED706AE5DB10FAD4EDDB3012DA34C25FE71A3A6EEA9E112842E53D54D0E020FA8192E45346259BBC96E4F1B48&uin=1152921505000885401&fromtag=120032'
+        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000003KNcyk0t3mwg_1.jpg?max_age=2592000'
+    },
     {
         name: "家后",
         artist: '江蕙',
@@ -21,3 +27,4 @@ const ap = new APlayer({
     },
     ]
 });
+
