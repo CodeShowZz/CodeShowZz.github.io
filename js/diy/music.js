@@ -1,9 +1,9 @@
 const ap = new APlayer({
     container: document.getElementById('aplayer'),
-    fixed: true,
-    autoplay: false, //自动播放
-    listFolded: true, //列表默认折叠
-    //lrcType: 3, //歌词传递方式
+    fixed: false,
+    autoplay: true, //自动播放
+    listFolded: false, //列表默认折叠
+    lrcType: 3, //歌词传递方式
     mutex: true,
     audio: [
      {
