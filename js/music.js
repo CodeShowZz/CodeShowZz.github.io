@@ -1,7 +1,7 @@
 const ap = new APlayer({
     container: document.getElementById('aplayer'),
     fixed: true,
-	autoplay: true, //自动播放
+    autoplay: true, //自动播放
     audio: [
 	{
         name: "浴室",
