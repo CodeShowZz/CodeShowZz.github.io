@@ -2,14 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://example.com/2022/09/14/%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F%E4%B9%8B%E7%B2%BE%E5%BD%A9%E8%A7%A3%E8%AF%B4/</loc>
+    <loc>http://example.com/about/index.html</loc>
     
     <lastmod>2022-09-24</lastmod>
     
   </url>
   
   <url>
-    <loc>http://example.com/about/index.html</loc>
+    <loc>http://example.com/2022/09/14/%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F%E4%B9%8B%E7%B2%BE%E5%BD%A9%E8%A7%A3%E8%AF%B4/</loc>
     
     <lastmod>2022-09-24</lastmod>
     
@@ -256,14 +256,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/jvm/</loc>
+    <loc>http://example.com/tags/elastic-search/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/tags/elastic-search/</loc>
+    <loc>http://example.com/tags/jvm/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -299,6 +299,13 @@
   
   <url>
     <loc>http://example.com/tags/redis/</loc>
+    <lastmod>2022-09-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/tags/spring-cloud/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -346,13 +353,6 @@
     <priority>0.6</priority>
   </url>
   
-  <url>
-    <loc>http://example.com/tags/spring-cloud/</loc>
-    <lastmod>2022-09-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
 
   
   <url>
@@ -370,14 +370,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/jvm/</loc>
+    <loc>http://example.com/categories/elastic-search/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/elastic-search/</loc>
+    <loc>http://example.com/categories/jvm/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -413,6 +413,13 @@
   
   <url>
     <loc>http://example.com/categories/redis/</loc>
+    <lastmod>2022-09-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/categories/spring-cloud/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -455,13 +462,6 @@
   
   <url>
     <loc>http://example.com/categories/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2022-09-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/categories/spring-cloud/</loc>
     <lastmod>2022-09-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
