@@ -33,7 +33,7 @@ const ap = new APlayer({
     {
        name: "再见莫妮卡",
        artist: '彭席彦、Franky弗兰奇',
-       url:'https://www.ytmp3.cn/down/50861.mp3',
+       url:'https://www.ytmp3.cn/down/77951.mp3',
        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000004Byln34HMGEB.jpg?max_age=2592000',
    },
     {
