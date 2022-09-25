@@ -6,16 +6,16 @@ const ap = new APlayer({
     mutex: false,
     audio: [
      {
-        name: "Mine Mine",
-        artist: '周杰伦',
-        url: 'https://dl.stream.qqmusic.qq.com/C400001ZLwSy1zmXVR.m4a?guid=2561414768&vkey=AB0595E8EFF63E66F89B7BCED706AE5DB10FAD4EDDB3012DA34C25FE71A3A6EEA9E112842E53D54D0E020FA8192E45346259BBC96E4F1B48&uin=1152921505000885401&fromtag=120032',
-        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000003KNcyk0t3mwg_1.jpg?max_age=2592000'
+        name: "再见小时候",
+        artist: '南拳妈妈',
+        url: 'https://www.ytmp3.cn/down/78225.mp3',
+        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000001nd5rE0UOHo5_2.jpg?max_age=2592000'
     },
     {
-        name: "家后",
-        artist: '江蕙',
-        url: 'https://dl.stream.qqmusic.qq.com/C400002J5tpL1DPD7C.m4a?guid=962252980&vkey=644F520711624E763AC67C44B4142992B84682127BBB475225E03425FCE3B0C9B3CA431A66582AB26C6BD62DBCE8D6F2FA55098AA15E1074&uin=1152921505000885401&fromtag=120032',
-        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000Te3Hp0toVGn_2.jpg?max_age=2592000',
+        name: "浪子回头",
+        artist: '茄子蛋',
+        url: 'https://www.ytmp3.cn/down/57545.mp3',
+        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000002XEXGd1zIYxB_1.jpg?max_age=2592000',
         
     },
     {
@@ -25,11 +25,23 @@ const ap = new APlayer({
         cover: 'https://y.qq.com/music/photo_new/T002R300x300M000000P4Dod0GzRlM.jpg?max_age=2592000',
     },
     {
-        name: "我很忙",
-        artist: 'A-Lin',
-        url: 'https://dl.stream.qqmusic.qq.com/C4000003NJrj1mcTKN.m4a?guid=4519797206&vkey=2F248DD2157921017BAF40CB9E39461983CD13D1E5824A2DAA5352C4A8A5E1DAFA9A506DEBF47CD5C2355A744F411D090351E470623AE6EF&uin=1152921505000885401&fromtag=120032',
-        cover: 'https://y.qq.com/music/photo_new/T002R300x300M000004Byln34HMGEB.jpg?max_age=2592000',
-            },
+        name: "看得最远的地方",
+        artist: '毛不易',
+        url:'https://www.ytmp3.cn/down/77644.mp3',
+	cover: 'https://y.qq.com/music/photo_new/T002R300x300M0000039nM8m1yhEnK_1.jpg?max_age=2592000',
+    },
+    {
+       name: "再见莫妮卡",
+       artist: '彭席彦、Franky弗兰奇',
+       url:'https://www.ytmp3.cn/down/50861.mp3',
+       cover: 'https://y.qq.com/music/photo_new/T002R300x300M000004Byln34HMGEB.jpg?max_age=2592000',
+   },
+    {
+       name: "有何不可",
+       artist: '许嵩',
+       url:'https://www.ytmp3.cn/down/77665.mp3',
+       cover: 'https://y.qq.com/music/photo_new/T002R300x300M000002KSDg90IaScI_1.jpg?max_age=2592000',
+     } 	
     ]
 });
 
