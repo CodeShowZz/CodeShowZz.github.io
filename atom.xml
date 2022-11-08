@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-10-29T10:13:04.341Z</updated>
+  <updated>2022-11-08T16:39:20.546Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,26 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title></title>
+    <link href="http://example.com/2022/11/08/%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81kafka%E7%9A%84%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1/"/>
+    <id>http://example.com/2022/11/08/%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81kafka%E7%9A%84%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1/</id>
+    <published>2022-11-08T14:59:49.010Z</published>
+    <updated>2022-11-08T16:39:20.546Z</updated>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h3 id="从一个场景开始"><a href="#从一个场景开始" class="headerlink" title="从一个场景开始"></a>从一个场景开始</h3><p>这篇文章,我来谈谈怎么保证kafka的消息不丢失这个话题.首先,我来假设一个场景,现在你要处理客户往银行卡充值的事件,比如A用户向银行卡充值100元,200元等类似的事件.假设你使用一个项目来把这个事件发给kafka,另外一个项目从kafka获取这个事件,然后对事件进行处理,往数据库里客户的银行卡上累加金额.这个场景如果把事件丢失了,那就是事故了.我们的系统绝对不允许有任何的差错,一旦出错,客户会投诉,别人就不敢用这个系统了.有了这样的场景,我们必须认真的去考虑怎么保证消息不丢失,并且能正确处理这些消息.我们的整个架构可以用下图来表示:</p><p>![截屏2022-11-08 下午11.16.04](/Users/huangjunlin/blog/blog-img/截屏2022-11-08 下午11.16.04.png)</p><p>我们来简单举个例子,什么情况会丢失消息.</p><ul><li><p>假如用户发起充值,这个时候项目A要发送充值事件到kafka,如果项目A没等到kafka响应,就认为事件提交成功了,那么就会丢失消息.这是生产者丢失消息的情况.</p></li><li><p>如果kafka没有把消息存入到磁盘,突然发生宕机.这是kafka丢失消息的情况.</p></li><li><p>如果项目B读取到消息后,还没将数据存储到数据库,提前告诉kafka消息已经处理完成.但这时数据库存储数据时发生错误了,那么消息就丢失了.这是消费者丢失消息的情况.</p></li></ul><p>这里只是举点简单的例子来表明消息丢失的情况,当然还会有很多场景也会造成消息的丢失,但是万变不离其宗.这里想表达的是,消息会不会丢失,不只是kafka的责任,生产者和消费者也承担着责任.要保证消息不丢失,这些环节都得考虑.</p><h3 id="生产者怎么保证消息不丢失"><a href="#生产者怎么保证消息不丢失" class="headerlink" title="生产者怎么保证消息不丢失"></a>生产者怎么保证消息不丢失</h3><p>生产者要保证消息不丢失,一定要等到kafka响应成功了,才放弃发送消息.如果消息发出去,比如kafka目前不可用了,那我们要继续重试去发送消息.比如网络异常了,在10秒内没有收到kafka的响应,我们也要重试去发送消息.总之生产者遇到错误了,解决之道就是不断重试(当然,在实际场景要灵活变通,我在这里有点激进,主要是想传达这种思想).直到生产者收到kafka的成功响应了,我们才能认为消息已经成功发送到kafka了.但这可能还不够,生产者还可以让kafka多做点事情,生产者可以要求kafka要把消息备份多少份,才能算消息发送成功.因为一台kafka机器(准确来说是分区,但是这里假设读者对这个概念是清楚的)还不够安全,假如宕机了,这个时候整个系统就使用不了.所以一般会有好几台kafka机器,一台负责接收消息,另外几台复制这台机器的消息,接收消息的那台kafka叫做首领,复制消息的叫做副本.假如一台宕机了,可以选举一台新的机器作为新的首领来接受请求.生产者可以要求kafka集群备份了N份,才能够向生产者发出成功响应.这个配置,在kafka术语中叫ack.在生产者端,可以配置ack参数,比如ack=3代表消息要复制3份成功后,kafka才能认为消息写入成功,给生产者返回成功响应.ack=all则表示所有机器都复制成功了,才能返回成功响应.否则生产者一直重试直到成功.当然重试有可能会发生消息重复,这个不在我们的讨论范围.</p><p>总结起来,生产者要做两件事情保证消息不丢失:</p><ul><li>如果消息发送失败,重试直到kafka返回成功响应.</li><li>设置ack=all(或者一个比较大的值N),让kafka的所有机器(或者N台)都获取到消息,才算消息写入成功,才返回成功响应.</li></ul><h3 id="kafka怎么保证消息不丢失"><a href="#kafka怎么保证消息不丢失" class="headerlink" title="kafka怎么保证消息不丢失"></a>kafka怎么保证消息不丢失</h3><p>消息在kafka中怎么才能不丢失呢.我们假设一个完美的情况,一台kafka接收到消息,然后另外几台kafka非常迅速的从这台kafka上复制消息,整个kafka的所有机器的消息都是同步的.但是事情不可能一直这么完美,因为网络等原因,副本有可能会复制失败,那么副本就不会有首领所有的消息,直到网络恢复正常,副本把没复制到的消息从首领那里迅速复制过来,重新变成同步的.另外首领也可能宕机,那么就要重新选出一个首领来处理消息,新的首领应该具备的特点是拥有所有的消息,但是有的副本可能还没复制到最新消息,导致消息不完整.如果让这些副本成为首领,那么可能就存在最新的消息丢失的可能性,所以我们不应该让没有所有消息的副本成为首领,在kafka的世界里,术语叫做禁用不完全的首领选举,通过配置<em>unclean.leader</em>.election.enable=false来制定,我们令可kafka不可用,也不能让这种副本成为首领.</p><p>另外,我们可以规定有几台kafka拥有全部的消息才能提供给生产者写入服务,比如设置为3,那么当至少有3台机器拥有所有的消息才能提供写入服务.这个在kafka中通过min.<em>insync</em>.replicas=N这个参数配置.再结合生产者发送的ack要求,kafka可以识别ack要求,才认为消息写入成功,给生产者返回成功响应.这样可以锦上添花.</p><p>总结起来,kafka要保证三件事情保证消息不丢失:</p><ul><li><p>通过配置<em>unclean.leader</em>.election.enable=false禁用不完全的首领选举,不让非同步副本提供服务</p></li><li><p>配置min.<em>insync</em>.replicas=N,保证同步副本个数,防止首领宕机后没有其它同步副本可以提供服务,没有足够的同步副本时,不对外提供写服务.</p></li><li><p>根据ack要求,向生产者返回成功响应</p></li></ul><h3 id="消费者怎么保证消息不丢失"><a href="#消费者怎么保证消息不丢失" class="headerlink" title="消费者怎么保证消息不丢失"></a>消费者怎么保证消息不丢失</h3><p>消息目前已经安全的存储到kafka上了,消费者从kafka已经可以获取到所有的消息.这个环节可能丢失的原因是,当消费者没有成功处理消息,就告诉kafka消息处理完成,这种情况就会丢失消息,术语叫做提前提交消息偏移量.一个最简单的做法是保证消息处理成功了,再提交偏移量告诉kafka消息真正处理完成了,这样消息就真正处理到了.所以在消费者这里,没真正处理完成就是丢失,而生产者和kafka的消息丢失主要表现在数据的传输和存储上.在上面的场景中,假如消费者拉取到一个充值事件,那么只有当数据存储到数据库中了,才应该拉取下一个充值事件(这里也有点激进,其实可以把处理失败的消息存储起来,后续再处理,总之要学会变通),否则消息就会丢失.消费者在处理过程中发生错误了,就不断重试去拉取发生错误的消息,直到处理成功了,才提交偏移量,这样就能保证消息不丢失.</p><p>总结起来,消费者要做一件事情保证消息不丢失</p><ul><li>消息处理成功了,再提交偏移量,如果处理失败,重试去拉取消息,直到处理成功.</li></ul><h3 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h3><p>在上面的场景中,充值事件到消费者这里已经不会丢失了,但是可能会出现消息重复.这个消息重复在我们的场景下也是一个事故,假如用户充值10元,我们因为消息多重复了几条,给用户充值了50元,那么公司将面临极大的损失,这绝对是不允许的.一个能想到的解决方案是给消息设置一个唯一标识,如果数据库中已经有该消息,则认为已经处理成功了.其实如果学会分析kafka消息怎么可能丢失,去分析消息怎么可能重复是非常轻而易举的事情.比如Kafka已经成功写入消息,但是给生产者返回成功响应时,网络出问题了,生产者误以为没有发送成功(比如设置了超时重试),那么就会重新发送消息,kafka就重复写入了一条消息.再比如,消费者成功处理了消息,但是偏移量还没提交,消费者宕机了,那么下一次拉取的消息就是重复的.消息重复是可以避免但无法杜绝的,如果kafka没办法做幂等,那么这个重担就只能交给消费者去做了.</p><p>另外,提供什么样的消息安全级别要根据场景来定,不同的场景适合不同的方案,我们的这种方案确实安全,但是为了安全可能会牺牲很多的性能,有可能因为太安全了,导致整个系统运行得非常的缓慢,消息处理的吞吐量很低,也会给系统带来灾难.总而言之,要结合真实的情况去制定一个合适的方案,灵活变通才是王道.</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
+      
+    
+    
+    
+    
+  </entry>
   
   <entry>
     <title>对JMM与happen-before的理解</title>
@@ -465,30 +485,6 @@
     
     
     <category term="rocketmq" scheme="http://example.com/tags/rocketmq/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis分布式锁</title>
-    <link href="http://example.com/2021/06/21/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/"/>
-    <id>http://example.com/2021/06/21/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</id>
-    <published>2021-06-21T03:16:00.000Z</published>
-    <updated>2021-06-21T04:23:12.634Z</updated>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="Redis分布式锁"><a href="#Redis分布式锁" class="headerlink" title="Redis分布式锁"></a>Redis分布式锁</h2><p>分布式锁主要用来解决分布式环境下资源的互斥访问,这篇文章就来介绍一下分布式锁.</p><h3 id="基本思路"><a href="#基本思路" class="headerlink" title="基本思路"></a>基本思路</h3><p>首先要保证获取锁和释放锁的正确性,通常来说就是保证获取锁和释放锁的原子性,一般会使用<code>SETNX key 唯一标识</code>命令来获取锁,在Lua脚本中通过唯一标识来释放锁,这样能保证获取锁和释放锁的客户端是同一个.</p><h3 id="考虑宕机"><a href="#考虑宕机" class="headerlink" title="考虑宕机"></a>考虑宕机</h3><p>当客户端服务获取到锁之后挂掉了,那么锁可能永远都没办法被另外的客户端获取到,所以此时要考虑给锁加一个过期时间,保证客户端服务挂掉之后锁也能释放,通常使用<code>SETNXEXPIRE key 唯一标识 过期时间</code>来实现.</p><h3 id="考虑可用性"><a href="#考虑可用性" class="headerlink" title="考虑可用性"></a>考虑可用性</h3><p>假如我们的Redis实例只有一个,那么有可能Redis实例挂了,那么分布式锁服务就不可用了,所以我们现在要想办法提高可用性.一个比较可靠的方式是使用RedLock算法.</p><h4 id="RedLock算法"><a href="#RedLock算法" class="headerlink" title="RedLock算法"></a>RedLock算法</h4><p>假设我们有5个Redis实例,彼此是独立的,那么RedLock的算法的运作过程如下:</p><ol><li><p>向各个Redis实例获取锁(<code>SETNXEXPIRE key 唯一标识 过期时间</code>),并且需要设置一个获取锁的超时时间(通常远远小于锁的过期时间),如果在这个超时时间之内没有获取到锁,那么则向另外的Redis实例获取锁.</p></li><li><p>当获取到锁的时间小于锁的失效时间,并且有超过半数的Redis实例上成功获取到锁时,锁才算获取成功.</p></li><li><p>如果锁没有获取成功(在锁过期前没有获取到锁或者没有在超过半数的实例上获取到锁),那么向所有的Redis实例进行一个解锁操作,即使某个Redis实例上并没有成功获取到锁.</p></li></ol><h3 id="持久化对分布式锁的影响"><a href="#持久化对分布式锁的影响" class="headerlink" title="持久化对分布式锁的影响"></a>持久化对分布式锁的影响</h3><p>假如我们没有使用持久化,那么实例重启之后key就会消失,其它服务就有可能获取到锁.比如本来在5台机器中的3台中成功获取到锁,此时挂掉一台,那么重启后没有设置key的实例就变成了3台(半数以上),其他的请求就可能获取到锁.为了保证可靠性,需要开启持久化模式,并设置<code>fsync=always</code>来保证数据不丢失.</p><h3 id="锁失效了怎么办"><a href="#锁失效了怎么办" class="headerlink" title="锁失效了怎么办"></a>锁失效了怎么办</h3><p>还有这样一个问题,假如我们获取到锁之后,做一个业务操作,这个业务操作在超过了锁的失效时间前还没有完成,那么其它的请求就有可能获取到分布式锁,这样破坏了锁的安全性.针对这种情况,可以在业务操作没有完成之前对锁的失效时间做一个延长,主要的步骤如下:</p><ol><li>获取到分布式锁</li><li>在获取到锁的机器上开启定时任务,根据唯一标识对获取到的key延长过期时间(使用lua脚本).</li><li>等到操作完成之后,我们就会释放该锁,这样这个key不可能再延长过期时间.</li></ol><p>通过这种方式,可以保证在业务操作完成之前,锁不会被释放.另外由于这个定时任务是在获取锁的机器上开启的,那么当这台机器挂了之后,也不会有定时任务对这个key进行一个过期时间的延长,还是可以满足机器挂掉之后key能够在过期时间到来时释放.</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
-      
-    
-    
-    
-    <category term="redis" scheme="http://example.com/categories/redis/"/>
-    
-    
-    <category term="redis" scheme="http://example.com/tags/redis/"/>
     
   </entry>
   
