@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-11-08T16:44:27.637Z</updated>
+  <updated>2022-11-23T16:32:10.738Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mysql之MVCC原理</title>
+    <link href="http://example.com/2022/11/24/Mysql%E4%B9%8BMVCC%E5%8E%9F%E7%90%86/"/>
+    <id>http://example.com/2022/11/24/Mysql%E4%B9%8BMVCC%E5%8E%9F%E7%90%86/</id>
+    <published>2022-11-23T16:14:00.000Z</published>
+    <updated>2022-11-23T16:32:10.738Z</updated>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><p>众所周知,mysql的数据库默认隔离级别是可重复读,那么mysql是如何做到可重复读的呢.这篇文章,就来谈谈mysql的多版本控制机制,也就是MVCC.</p><h3 id="从版本链开始说起"><a href="#从版本链开始说起" class="headerlink" title="从版本链开始说起"></a>从版本链开始说起</h3><p>假设我们现在有一张表t,里面有id,name,id是主键,这个表目前是空表.现在我们开启一个事务,往里面插入一条id=1,name=mysql的数据.mysql在聚簇索引中,除了保存数据外,还保存了一个trx_id和一个roll_pointer字段,trx_id表明数据是哪个事务操作的该条数据,roll_pointer指针指向该数据的前一个版本.假设我们刚刚进行插入语句时的事务id为100,那么聚簇索引中这条数据的trx_id为100,roll_pointer指向一条insert undo记录,可以简单理解这条记录和我们的数据是一模一样的,除了它的roll pointer是空的.可以简单用一张图来描述我们现在的数据状态:</p><p> <img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fh9g6f2wj310i0ew0ta.jpg" alt="截屏2022-11-23 下午11.27.28"></p><p>然后,假设我们开启了一个新的事务,对id=1的记录对应的name进行修改,改成了java,事务id为200.接着,又开启一个新的事务,将name又改成了spring,事务id为300.对于mysql来说,一条记录是有保存修改历史的,就像我们用的git一样,有版本的概念.mysql同样也是这样的思想,经过两次修改,最新的name是spring,trx_id为300,但是事务id为100和200的两条历史记录也会保存下来.就我们上面的上次修改来说,最终形成的数据状态是这样的:</p><p><img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fhhgfig5j318g0ii3zc.jpg" alt="image-20221123233538573"></p><p>和insert操作不一样,update产生的历史版本记录的roll_pointer是有指向的,指向它的上一个版本.我们可以看到,新的数据已经是事务id为300的数据了,越上面的数据版本越新,这就是版本链的概念.</p><h3 id="可重复读的实现"><a href="#可重复读的实现" class="headerlink" title="可重复读的实现"></a>可重复读的实现</h3><p>说完了版本链,现在来讲讲可重复读是如何实现的.假设我们上面所说的这个场景的事务都已经提交了,那么我们开启一个新的事务,假设事务id是400,那么我们用普通的select语句去读取id为1的记录,我们再假设整个系统目前就我们这么一个事务,那么读出来的name就是spring.那假如此时系统里面还有其他事务也在修改id为1的记录呢?这里就要引出一个快照的概念,其实就是版本链上哪些数据可见的规则.在这个隔离级别下,快照会在事务开始时生成一次,并且只生成这一次.假如我开启事务id为400的事务时,系统中还有一个事务把id为1的name修改为linux,但处于未提交状态,事务的id为399.这个未提交状态是在我们开启事务id为400的时候知道的,如果下一秒这个事务都提交了,我们的快照也是认为没有提交的.另外,假设此时快照生成后,还有事务id比400还大的事务被创建来修改id为1的记录,即使这些事务提交了,快照也会认为它们没有提交,因为在快照看来,时间就仿佛冻结在开启事务的那一刻.</p><p>比如说,当事务id为400的事务对id进行一个select name from t where id =1的查询,那么获取到的值是spring.然后事务id为399的事务提交了,事务id为400的事务再次运行同样的查询语句,那么返回的name还是spring.因为我们这两次查询用的是同一个快照,那么即使事务id为399修改了数据之后提交,我们也认为它是没有提交的,简单的理解就是:只认为在事务开启前那一刻已提交的数据才是查得到的.这样,无论事务id为400所在的事务查询多少次,查出来的name永远都是spring.除此之外,在事务id为400的事务在查询中,可能会有新的事务也来修改这个值,但是我们知道,快照对这些事务是不可见的,所以更加读不到它们的修改.但是,这些当时还在运行中的事务和后来运行的事务对id=1的记录的修改是会加入到版本链中的(即使事务还没提交),我们只是依据快照,自版本链的顶部往下搜索,过滤掉一些不可见的记录,直到找到第一条符合的记录,也就是快照开启时已提交的最新的一个版本对应的记录.其实可以画图,将所有的这些记录都加入到版本链中,来模拟这个过程.但是画图实现太费时间了,所以我就懒得画了.</p><h3 id="如果是读已提交隔离级别呢"><a href="#如果是读已提交隔离级别呢" class="headerlink" title="如果是读已提交隔离级别呢"></a>如果是读已提交隔离级别呢</h3><p>对于已提交隔离级别来说.也是生成快照,但是它和可重复读不一样的一点是,只要查询,就生成一个新的快照.这样一来,因为快照会变化,所以中途如果有数据提交了,在这个隔离级别下是可以读得到的.比如将上面的例子换成在这个隔离级别下进行实验,第二次查询出来的name将会是linux.因为第一次查询时,事务id为399的事务还没有提交,生成的快照认为此条数据是读不到的.但是第二次查询,又生成了新的快照,事务id为399的事务提交了,再次查询就可以读到linux这个值.</p><p>所以,这两个隔离级别下都是读已提交的数据.只是因为快照的生成时机不一样,导致最终读取的数据不一样而已.</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
+      
+    
+    
+    
+    <category term="mysql" scheme="http://example.com/categories/mysql/"/>
+    
+    
+    <category term="mysql" scheme="http://example.com/tags/mysql/"/>
+    
+  </entry>
   
   <entry>
     <title>怎么保证kafka的消息不丢失</title>
@@ -452,30 +476,6 @@
     <updated>2021-06-21T06:02:29.451Z</updated>
     
     <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="怎么保证RocketMQ消息不丢失"><a href="#怎么保证RocketMQ消息不丢失" class="headerlink" title="怎么保证RocketMQ消息不丢失"></a>怎么保证RocketMQ消息不丢失</h2><p>要保证RocketMQ消息不丢失,需要生产者、Broker以及消费者的配合.</p><h3 id="生产者"><a href="#生产者" class="headerlink" title="生产者"></a>生产者</h3><p>生产者在发送消息时,如果没有收到服务器的成功响应,那么就要重试发送消息,直到消息发送成功.</p><h3 id="Broker"><a href="#Broker" class="headerlink" title="Broker"></a>Broker</h3><p>Broker要做的事情是保证消息不丢失,当接收到生产者发送的消息时,Broker为了保证消息不丢失,会将数据同步到磁盘中,为了做到真正意义上的不丢失,需要Broker设置同步刷盘模式,必须要等到数据真的同步到磁盘上之后,再向客户端返回消息发送成功状态.</p><p>除此之外,为了提高服务的可用性,Broker通常会采用主从模式,这个时候还要保证消息真正同步到了从服务器上,需要设置主从服务器复制策略为同步复制模式,等到所有的从服务器都真正接收到数据并存储到磁盘时,再向客户端返回消息发送成功状态.</p><p>总结起来就是两点:</p><ul><li>Master保证数据同步到磁盘</li><li>Slava保证数据同步到磁盘</li></ul><h3 id="消费者"><a href="#消费者" class="headerlink" title="消费者"></a>消费者</h3><p>对于消费者而言,消息不丢失意味着能够成功消费到所有消息.正常情况下,消费者成功消费之后,再向Broker返回成功消费信息,否则返回消费失败信息,使得下次还能够重新消费那些没有消费成功的消息.</p><h3 id="效率问题"><a href="#效率问题" class="headerlink" title="效率问题"></a>效率问题</h3><p>为了保证消息不丢失,需要使用大量的同步策略,这样可能导致效率的低下,所以在实际生产环境中还需要结合实际业务进行权衡.</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
-      
-    
-    
-    
-    <category term="rocketmq" scheme="http://example.com/categories/rocketmq/"/>
-    
-    
-    <category term="rocketmq" scheme="http://example.com/tags/rocketmq/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Kafka和RocketMQ的区别</title>
-    <link href="http://example.com/2021/06/21/Kafka%E5%92%8CRocketMQ%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
-    <id>http://example.com/2021/06/21/Kafka%E5%92%8CRocketMQ%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
-    <published>2021-06-21T04:56:00.000Z</published>
-    <updated>2021-06-21T05:40:02.471Z</updated>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="Kafka和RocketMQ的区别"><a href="#Kafka和RocketMQ的区别" class="headerlink" title="Kafka和RocketMQ的区别"></a>Kafka和RocketMQ的区别</h2><table><thead><tr><th align="center"></th><th align="center">RocketMQ</th><th align="center">Kafka</th></tr></thead><tbody><tr><td align="center">协议和规范</td><td align="center">拉取模式,支持TCP、JMS、OpenMessage</td><td align="center">拉取模式,支持TCP</td></tr><tr><td align="center">消息顺序</td><td align="center">保证严格的消息顺序,并且可以优雅扩展</td><td align="center">保证分区消息顺序</td></tr><tr><td align="center">批量消息</td><td align="center">支持,使用同步模式来避免消息丢失</td><td align="center">支持,使用异步生产者</td></tr><tr><td align="center">广播消息</td><td align="center">支持</td><td align="center">不支持</td></tr><tr><td align="center">消息过滤</td><td align="center">支持,使用基于SQL92的属性过滤表达式</td><td align="center">支持,使用Kafka Stream过滤消息</td></tr><tr><td align="center">服务端触发重新发送消息</td><td align="center">支持</td><td align="center">不支持</td></tr><tr><td align="center">消息追溯</td><td align="center">支持偏移量和时间戳指定</td><td align="center">支持偏移量指定</td></tr><tr><td align="center">高可用</td><td align="center">使用主从模式</td><td align="center">使用Zookeeper</td></tr><tr><td align="center">消息追踪</td><td align="center">支持</td><td align="center">不支持</td></tr><tr><td align="center">服务端重新发送消息</td><td align="center">支持</td><td align="center">不支持</td></tr></tbody></table>]]></content>
     
     
       
