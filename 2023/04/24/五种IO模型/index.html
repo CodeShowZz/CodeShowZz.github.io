@@ -239,9 +239,8 @@
 <li>异步式IO</li>
 </ul>
 <p>我会在这篇文章尽可能的把这几个IO模型讲得通俗易懂.</p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/CodeShowZz.github.io/master/images/java-volatile-1.png" srcset="/img/loading.gif" lazyload alt="aaa"></p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/CodeShowZz.github.io/master/images/java-volatile-1.png" srcset="/img/loading.gif" lazyload alt="aa"></p>
-<h2 id="阻塞式IO"><a href="#阻塞式IO" class="headerlink" title="阻塞式IO"></a>阻塞式IO</h2><p>当我们的应用程序要进行数据的读取时,我们通过<code>系统调用</code>去获取数据,通常程序会调用一个<code>recvfrom</code>,在<code>阻塞式IO</code>的场景下,发出这个信号之后,应用程序就会阻塞,直到数据准备好,并且从<code>内核空间</code>复制到<code>应用程序数据缓冲区</code>之后,这个读取过程才算完成.整个过程分成两步,一是等待数据准备好,二是数据要有一个从<code>内核空间</code>到<code>应用程序缓冲区</code>的一个过程,这两个过程进行完之后,我们的应用程序才可以读取数据,在这之前,我们的应用程序都是阻塞的,所以我们称之为<code>阻塞式IO</code>.![阻塞式IO](截屏2023-04-23 下午11.45.16.png)</p>
+<h2 id="阻塞式IO"><a href="#阻塞式IO" class="headerlink" title="阻塞式IO"></a>阻塞式IO</h2><p>当我们的应用程序要进行数据的读取时,我们通过<code>系统调用</code>去获取数据,通常程序会调用一个<code>recvfrom</code>,在<code>阻塞式IO</code>的场景下,发出这个信号之后,应用程序就会阻塞,直到数据准备好,并且从<code>内核空间</code>复制到<code>应用程序数据缓冲区</code>之后,这个读取过程才算完成.整个过程分成两步,一是等待数据准备好,二是数据要有一个从<code>内核空间</code>到<code>应用程序缓冲区</code>的一个过程,这两个过程进行完之后,我们的应用程序才可以读取数据,在这之前,我们的应用程序都是阻塞的,所以我们称之为<code>阻塞式IO</code>.</p>
+<p>![阻塞式IO](截屏2023-04-23 下午11.45.16.png)</p>
 <p>在这里引用一张<code>Unix网络编程</code>书中的一张图片,我们可以看到进程发出一个<code>recvfrom</code>在整个过程中都处于阻塞状态,第一个小过程是等待数据,第二个小过程是从<code>内核空间</code>复制数据到<code>用户程序缓冲区</code>,直到数据准备完成之后,内核返回一个OK的响应.</p>
 <p>在这里,我将用一个生活的场景来类比这个过程,比如我们去饭馆吃饭,通常我们会有两个过程,第一个过程是点菜,第二个过程是上菜,并且你和老板约定说:”你什么也不做,就干在这等着,菜好了就端上来,并且上菜过程你也不做其他事情”.那么阻塞的场景好比是我们去点菜,然后菜品制作的过程我们一直在等,菜品制作完之后我们还等着上菜,整个过程都一直处在等待状态.</p>
 <p>但是有时候,你不想这样干等着,你想玩会手机,你和老板约定说:”你们厨房先做菜,我会隔一段时间问一下菜准备好了没,如果菜准备好了,就帮我端上来,上菜过程我不玩手机,我就等着上菜“这样,你就可以玩会手机,然后过几分钟就问一下菜准备好了没,这样你就可以用等待做菜的时间去玩手机了,不必一直等着,但是你还是得不定时的去问一下老板.这就是我们即将介绍的<code>非阻塞式IO</code>.</p>
