@@ -18,7 +18,7 @@
   <meta name="author" content="Bean">
   <meta name="keywords" content="">
   
-  <title>mysql之MVCC原理 - 君霖的blog</title>
+  <title>君霖的blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
 
@@ -164,7 +164,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="mysql之MVCC原理">
+            <span class="h2" id="subtitle" title="">
               
             </span>
 
@@ -174,8 +174,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2022-11-24 00:14" pubdate>
-        2022年11月24日 凌晨
+      <time datetime="2023-04-23 23:28" pubdate>
+        2023年4月23日 晚上
       </time>
     </span>
   
@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.5k 字
+      1.7k 字
     </span>
   
 
@@ -196,7 +196,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      15
+      17
        分钟
     </span>
   
@@ -226,40 +226,36 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">mysql之MVCC原理</h1>
+            <h1 style="display: none"></h1>
             
             <div class="markdown-body">
-              <hr>
-<p>众所周知,mysql的数据库默认隔离级别是可重复读,那么mysql是如何做到可重复读的呢.这篇文章,就来谈谈mysql的多版本控制机制,也就是MVCC.</p>
-<h3 id="从版本链开始说起"><a href="#从版本链开始说起" class="headerlink" title="从版本链开始说起"></a>从版本链开始说起</h3><p>假设我们现在有一张表t,里面有id,name,id是主键,这个表目前是空表.现在我们开启一个事务,往里面插入一条id=1,name=mysql的数据.mysql在聚簇索引中,除了保存数据外,还保存了一个trx_id和一个roll_pointer字段,trx_id表明数据是哪个事务操作的该条数据,roll_pointer指针指向该数据的前一个版本.假设我们刚刚进行插入语句时的事务id为100,那么聚簇索引中这条数据的trx_id为100,roll_pointer指向一条insert undo记录,可以简单理解这条记录和我们的数据是一模一样的,除了它的roll pointer是空的.可以简单用一张图来描述我们现在的数据状态:</p>
-<p> <img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fh9g6f2wj310i0ew0ta.jpg" srcset="/img/loading.gif" lazyload alt="截屏2022-11-23 下午11.27.28"></p>
-<p>然后,假设我们开启了一个新的事务,对id=1的记录对应的name进行修改,改成了java,事务id为200.接着,又开启一个新的事务,将name又改成了spring,事务id为300.对于mysql来说,一条记录是有保存修改历史的,就像我们用的git一样,有版本的概念.mysql同样也是这样的思想,经过两次修改,最新的name是spring,trx_id为300,但是事务id为100和200的两条历史记录也会保存下来.就我们上面的上次修改来说,最终形成的数据状态是这样的:</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fhhgfig5j318g0ii3zc.jpg" srcset="/img/loading.gif" lazyload alt="image-20221123233538573"></p>
-<p>和insert操作不一样,update产生的历史版本记录的roll_pointer是有指向的,指向它的上一个版本.我们可以看到,新的数据已经是事务id为300的数据了,越上面的数据版本越新,这就是版本链的概念.</p>
-<h3 id="可重复读的实现"><a href="#可重复读的实现" class="headerlink" title="可重复读的实现"></a>可重复读的实现</h3><p>说完了版本链,现在来讲讲可重复读是如何实现的.假设我们上面所说的这个场景的事务都已经提交了,那么我们开启一个新的事务,假设事务id是400,那么我们用普通的select语句去读取id为1的记录,我们再假设整个系统目前就我们这么一个事务,那么读出来的name就是spring.那假如此时系统里面还有其他事务也在修改id为1的记录呢?这里就要引出一个快照的概念,其实就是版本链上哪些数据可见的规则.在这个隔离级别下,快照会在事务开始时生成一次,并且只生成这一次.假如我开启事务id为400的事务时,系统中还有一个事务把id为1的name修改为linux,但处于未提交状态,事务的id为399.这个未提交状态是在我们开启事务id为400的时候知道的,如果下一秒这个事务都提交了,我们的快照也是认为没有提交的.另外,假设此时快照生成后,还有事务id比400还大的事务被创建来修改id为1的记录,即使这些事务提交了,快照也会认为它们没有提交,因为在快照看来,时间就仿佛冻结在开启事务的那一刻.</p>
-<p>比如说,当事务id为400的事务对id进行一个select name from t where id =1的查询,那么获取到的值是spring.然后事务id为399的事务提交了,事务id为400的事务再次运行同样的查询语句,那么返回的name还是spring.因为我们这两次查询用的是同一个快照,那么即使事务id为399修改了数据之后提交,我们也认为它是没有提交的,简单的理解就是:只认为在事务开启前那一刻已提交的数据才是查得到的.这样,无论事务id为400所在的事务查询多少次,查出来的name永远都是spring.除此之外,在事务id为400的事务在查询中,可能会有新的事务也来修改这个值,但是我们知道,快照对这些事务是不可见的,所以更加读不到它们的修改.但是,这些当时还在运行中的事务和后来运行的事务对id=1的记录的修改是会加入到版本链中的(即使事务还没提交),我们只是依据快照,自版本链的顶部往下搜索,过滤掉一些不可见的记录,直到找到第一条符合的记录,也就是快照开启时已提交的最新的一个版本对应的记录.其实可以画图,将所有的这些记录都加入到版本链中,来模拟这个过程.但是画图实现太费时间了,所以我就懒得画了.</p>
-<h3 id="如果是读已提交隔离级别呢"><a href="#如果是读已提交隔离级别呢" class="headerlink" title="如果是读已提交隔离级别呢"></a>如果是读已提交隔离级别呢</h3><p>对于已提交隔离级别来说.也是生成快照,但是它和可重复读不一样的一点是,只要查询,就生成一个新的快照.这样一来,因为快照会变化,所以中途如果有数据提交了,在这个隔离级别下是可以读得到的.比如将上面的例子换成在这个隔离级别下进行实验,第二次查询出来的name将会是linux.因为第一次查询时,事务id为399的事务还没有提交,生成的快照认为此条数据是读不到的.但是第二次查询,又生成了新的快照,事务id为399的事务提交了,再次查询就可以读到linux这个值.</p>
-<p>所以,这两个隔离级别下都是读已提交的数据.只是因为快照的生成时机不一样,导致最终读取的数据不一样而已.</p>
+              <h1 id="五种IO模型"><a href="#五种IO模型" class="headerlink" title="五种IO模型"></a>五种IO模型</h1><p>现在,我来介绍一下我所理解的五种IO模型.在本篇文章中,我们以Input为例来进行讲解.其中五种IO模型分别是</p>
+<ul>
+<li>阻塞式IO</li>
+<li>非阻塞式IO</li>
+<li>IO多路复用</li>
+<li>信号驱动IO</li>
+<li>异步式IO</li>
+</ul>
+<p>我会在这篇文章尽可能的把这几个IO模型讲得通俗易懂.</p>
+<h2 id="阻塞式IO"><a href="#阻塞式IO" class="headerlink" title="阻塞式IO"></a>阻塞式IO</h2><p>当我们的应用程序要进行数据的读取时,我们通过<code>系统调用</code>去获取数据,通常程序会调用一个<code>recvfrom</code>,在<code>阻塞式IO</code>的场景下,发出这个信号之后,应用程序就会阻塞,直到数据准备好,并且从<code>内核空间</code>复制到<code>应用程序数据缓冲区</code>之后,这个读取过程才算完成.整个过程分成两步,一是等待数据准备好,二是数据要有一个从<code>内核空间</code>到<code>应用程序缓冲区</code>的一个过程,这两个过程进行完之后,我们的应用程序才可以读取数据,在这之前,我们的应用程序都是阻塞的,所以我们称之为<code>阻塞式IO</code>.![阻塞式IO](../../blog-img/截屏2023-04-23 下午11.45.16.png)</p>
+<p>在这里引用一张<code>Unix网络编程</code>书中的一张图片,我们可以看到进程发出一个<code>recvfrom</code>在整个过程中都处于阻塞状态,第一个小过程是等待数据,第二个小过程是从<code>内核空间</code>复制数据到<code>用户程序缓冲区</code>,直到数据准备完成之后,内核返回一个OK的响应.</p>
+<p>在这里,我将用一个生活的场景来类比这个过程,比如我们去饭馆吃饭,通常我们会有两个过程,第一个过程是点菜,第二个过程是上菜,并且你和老板约定说:”你什么也不做,就干在这等着,菜好了就端上来,并且上菜过程你也不做其他事情”.那么阻塞的场景好比是我们去点菜,然后菜品制作的过程我们一直在等,菜品制作完之后我们还等着上菜,整个过程都一直处在等待状态.</p>
+<p>但是有时候,你不想这样干等着,你想玩会手机,你和老板约定说:”你们厨房先做菜,我会隔一段时间问一下菜准备好了没,如果菜准备好了,就帮我端上来,上菜过程我不玩手机,我就等着上菜“这样,你就可以玩会手机,然后过几分钟就问一下菜准备好了没,这样你就可以用等待做菜的时间去玩手机了,不必一直等着,但是你还是得不定时的去问一下老板.这就是我们即将介绍的<code>非阻塞式IO</code>.</p>
+<h2 id="非阻塞式IO"><a href="#非阻塞式IO" class="headerlink" title="非阻塞式IO"></a>非阻塞式IO</h2><p><code>非阻塞式IO</code>是应用程序发出一个<code>recvfrom</code>指令,但是如果数据没有准备好的话,会立即得到一个响应,应用程序会隔一段时间再次发出指令,直到数据准备好的时候,数据就会从<code>内核空间</code>复制数据到<code>用户程序缓冲区</code>,这个复制数据的过程和<code>阻塞式IO</code>是一模一样的,应用程序同样是阻塞的.但是我们的第一个等待数据准备的过程中,应用程序是可以做其他事情的,所以<code>非阻塞式IO</code>实际上指的是第一阶段是非阻塞的,而第二个阶段还是阻塞的.这里继续引用<code>Unix网络编程</code>书中的一张图片.</p>
+<p>![非阻塞式IO](../../blog-img/截屏2023-04-24 上午12.19.08.png)</p>
+<p>我们把程序不时发出<code>recvfrom</code>的这个过程叫做<code>轮询</code>,当发出<code>recvfrom</code>的时候,此时数据还没有准备好,内核返回一个<code>EWOULDBLOCK</code>的响应,表示数据还没准备好.等哪一次准备好了,就会进行数据复制的过程,复制完成后,会返回一个OK的响应.很明显,我们可以看出<code>非阻塞式IO</code>和<code>阻塞式IO</code>的区别仅在第一个过程,但是第一个过程变得更加的灵活.</p>
+<p>通过一个类比的例子,我们应该可以很清晰的知道一个应用程序读取数据的两阶段了,接下去的几个模型中,不再进行这种类比,因为我觉得只要理解了这两个过程,直接阐述具体模型更容易理解,类比就更复杂了.</p>
+<h2 id="IO多路复用"><a href="#IO多路复用" class="headerlink" title="IO多路复用"></a>IO多路复用</h2><p>废话不多说,先给出一张<code>IO多路复用</code>的图,英文叫做<code>IO Multiplexing</code>.</p>
+<p>![IO多路复用](../../blog-img/截屏2023-04-24 上午12.37.00.png)</p>
+<p>首先,我们可以很直接的从图中可以看出程序首先调用了一个<code>select</code>,然后等待数据准备好,但是此时并没有直接进入数据复制的过程,而是还需要再发出一个<code>recvfrom</code>,才会进行数据复制的过程,第一个阶段是阻塞的,第二个阶段还是阻塞的,跟第一种<code>阻塞式IO</code>几乎没有太大的差别,但是很明显还是可以看出,在等待数据准备好之后,应用程序可以选择去进行数据复制,也可以选择后面再进行数据复制,相当于把<code>阻塞式IO</code>分成了两个阶段来做,提高了灵活性.但是除此之外,第一个阶段其实也是暗藏玄机的,在这个过程中,我们可以等待多个输入完成,比如在网络编程中,是等待多个<code>套接字</code>,而上面的两种模型,通常是等待一个输入准备好.在这个模型中,如果多个输入中,如果没有一个输入可以读取,那么应用程序将会一直等待下去,直到有大于或等于一个输入可以读取,那么将返回给应用程序一个<code>readable</code>响应,通常根据这个响应,我们会知道哪些输入已经准备好,哪些输入还没有准备好,然后我们根据这些准备好的输入来进行数据的复制过程,这个数据复制过程和上面两种模型的数据复制是一模一样的,这里不再阐述.</p>
+<p>之所以叫做IO多路复用,我认为主要来自于第一个阶段可以等待大于一个或多个输入准备好,一旦有大于等或于一个输入准备好的时候,程序将不再处于阻塞状态,可以立即处理一个或多个准备好的输入,这种处理比<code>阻塞式</code>IO更加的灵活.</p>
 
             </div>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/mysql/">mysql</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/mysql/">mysql</a>
-                    
-                  </div>
                 
               </div>
               
@@ -274,18 +270,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/12/20/HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile"></span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/11/08/%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81kafka%E7%9A%84%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1/">
-                        <span class="hidden-mobile">怎么保证kafka的消息不丢失</span>
+                      <a href="/2022/12/27/test/">
+                        <span class="hidden-mobile"></span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

@@ -18,7 +18,7 @@
   <meta name="author" content="Bean">
   <meta name="keywords" content="">
   
-  <title>mysql之MVCC原理 - 君霖的blog</title>
+  <title>君霖的blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
 
@@ -164,7 +164,7 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="mysql之MVCC原理">
+            <span class="h2" id="subtitle" title="">
               
             </span>
 
@@ -174,8 +174,8 @@
   
     <span class="post-meta">
       <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2022-11-24 00:14" pubdate>
-        2022年11月24日 凌晨
+      <time datetime="2022-12-20 23:35" pubdate>
+        2022年12月20日 晚上
       </time>
     </span>
   
@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.5k 字
+      1.1k 字
     </span>
   
 
@@ -196,7 +196,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      15
+      12
        分钟
     </span>
   
@@ -226,40 +226,36 @@
         <div class="py-5" id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">mysql之MVCC原理</h1>
+            <h1 style="display: none"></h1>
             
             <div class="markdown-body">
-              <hr>
-<p>众所周知,mysql的数据库默认隔离级别是可重复读,那么mysql是如何做到可重复读的呢.这篇文章,就来谈谈mysql的多版本控制机制,也就是MVCC.</p>
-<h3 id="从版本链开始说起"><a href="#从版本链开始说起" class="headerlink" title="从版本链开始说起"></a>从版本链开始说起</h3><p>假设我们现在有一张表t,里面有id,name,id是主键,这个表目前是空表.现在我们开启一个事务,往里面插入一条id=1,name=mysql的数据.mysql在聚簇索引中,除了保存数据外,还保存了一个trx_id和一个roll_pointer字段,trx_id表明数据是哪个事务操作的该条数据,roll_pointer指针指向该数据的前一个版本.假设我们刚刚进行插入语句时的事务id为100,那么聚簇索引中这条数据的trx_id为100,roll_pointer指向一条insert undo记录,可以简单理解这条记录和我们的数据是一模一样的,除了它的roll pointer是空的.可以简单用一张图来描述我们现在的数据状态:</p>
-<p> <img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fh9g6f2wj310i0ew0ta.jpg" srcset="/img/loading.gif" lazyload alt="截屏2022-11-23 下午11.27.28"></p>
-<p>然后,假设我们开启了一个新的事务,对id=1的记录对应的name进行修改,改成了java,事务id为200.接着,又开启一个新的事务,将name又改成了spring,事务id为300.对于mysql来说,一条记录是有保存修改历史的,就像我们用的git一样,有版本的概念.mysql同样也是这样的思想,经过两次修改,最新的name是spring,trx_id为300,但是事务id为100和200的两条历史记录也会保存下来.就我们上面的上次修改来说,最终形成的数据状态是这样的:</p>
-<p><img src="https://tva1.sinaimg.cn/large/008vxvgGgy1h8fhhgfig5j318g0ii3zc.jpg" srcset="/img/loading.gif" lazyload alt="image-20221123233538573"></p>
-<p>和insert操作不一样,update产生的历史版本记录的roll_pointer是有指向的,指向它的上一个版本.我们可以看到,新的数据已经是事务id为300的数据了,越上面的数据版本越新,这就是版本链的概念.</p>
-<h3 id="可重复读的实现"><a href="#可重复读的实现" class="headerlink" title="可重复读的实现"></a>可重复读的实现</h3><p>说完了版本链,现在来讲讲可重复读是如何实现的.假设我们上面所说的这个场景的事务都已经提交了,那么我们开启一个新的事务,假设事务id是400,那么我们用普通的select语句去读取id为1的记录,我们再假设整个系统目前就我们这么一个事务,那么读出来的name就是spring.那假如此时系统里面还有其他事务也在修改id为1的记录呢?这里就要引出一个快照的概念,其实就是版本链上哪些数据可见的规则.在这个隔离级别下,快照会在事务开始时生成一次,并且只生成这一次.假如我开启事务id为400的事务时,系统中还有一个事务把id为1的name修改为linux,但处于未提交状态,事务的id为399.这个未提交状态是在我们开启事务id为400的时候知道的,如果下一秒这个事务都提交了,我们的快照也是认为没有提交的.另外,假设此时快照生成后,还有事务id比400还大的事务被创建来修改id为1的记录,即使这些事务提交了,快照也会认为它们没有提交,因为在快照看来,时间就仿佛冻结在开启事务的那一刻.</p>
-<p>比如说,当事务id为400的事务对id进行一个select name from t where id =1的查询,那么获取到的值是spring.然后事务id为399的事务提交了,事务id为400的事务再次运行同样的查询语句,那么返回的name还是spring.因为我们这两次查询用的是同一个快照,那么即使事务id为399修改了数据之后提交,我们也认为它是没有提交的,简单的理解就是:只认为在事务开启前那一刻已提交的数据才是查得到的.这样,无论事务id为400所在的事务查询多少次,查出来的name永远都是spring.除此之外,在事务id为400的事务在查询中,可能会有新的事务也来修改这个值,但是我们知道,快照对这些事务是不可见的,所以更加读不到它们的修改.但是,这些当时还在运行中的事务和后来运行的事务对id=1的记录的修改是会加入到版本链中的(即使事务还没提交),我们只是依据快照,自版本链的顶部往下搜索,过滤掉一些不可见的记录,直到找到第一条符合的记录,也就是快照开启时已提交的最新的一个版本对应的记录.其实可以画图,将所有的这些记录都加入到版本链中,来模拟这个过程.但是画图实现太费时间了,所以我就懒得画了.</p>
-<h3 id="如果是读已提交隔离级别呢"><a href="#如果是读已提交隔离级别呢" class="headerlink" title="如果是读已提交隔离级别呢"></a>如果是读已提交隔离级别呢</h3><p>对于已提交隔离级别来说.也是生成快照,但是它和可重复读不一样的一点是,只要查询,就生成一个新的快照.这样一来,因为快照会变化,所以中途如果有数据提交了,在这个隔离级别下是可以读得到的.比如将上面的例子换成在这个隔离级别下进行实验,第二次查询出来的name将会是linux.因为第一次查询时,事务id为399的事务还没有提交,生成的快照认为此条数据是读不到的.但是第二次查询,又生成了新的快照,事务id为399的事务提交了,再次查询就可以读到linux这个值.</p>
-<p>所以,这两个隔离级别下都是读已提交的数据.只是因为快照的生成时机不一样,导致最终读取的数据不一样而已.</p>
+              <p>HashMap的实现原理是什么样的?在面试中经常会遇到这个问题.那这个问题实际上是要问哪些问题呢,能不能将这个问题细化一下,表达得更精确一点.在我看来,通常要要问以下几个问题:</p>
+<ol>
+<li>HashMap的数据结构</li>
+<li>HashMap的hash方法是什么样的,为什么要这么实现</li>
+<li>HashMap的负载因子是什么,有什么用</li>
+<li>HashMap是如何扩容的</li>
+<li>HashMap的get方法和put方法是如何实现的</li>
+</ol>
+<p>把这些问题弄懂之后,对HashMap的原理算是很大程度的理解了.</p>
+<h3 id="HashMap的实现原理"><a href="#HashMap的实现原理" class="headerlink" title="HashMap的实现原理"></a>HashMap的实现原理</h3><p>首先,我直接通过源码的方式提取出一些HashMap中一些重要的字段,在一些字段上标明了注释,在这里不关注太多的细节,只把最重要及最精华的部分拿出来讲,源码中有太多的细节实现,我觉得没有必要死抠一些可能暂时不太有用的东西,能把大体的实现思路说清楚是我的目的.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">//节点数组,在必要的时候会进行扩容,长度总是2的幂次方</span><br><span class="hljs-keyword">transient</span> Node&lt;K,V&gt;[] table;<br><br><span class="hljs-keyword">static</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Node</span>&lt;<span class="hljs-title">K</span>,<span class="hljs-title">V</span>&gt; <span class="hljs-keyword">implements</span> <span class="hljs-title">Map</span>.<span class="hljs-title">Entry</span>&lt;<span class="hljs-title">K</span>,<span class="hljs-title">V</span>&gt; </span>&#123;<br>        <span class="hljs-comment">//键的hash值</span><br>        <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> hash;<br>        <span class="hljs-keyword">final</span> K key;<br>        V value;<br>  			<span class="hljs-comment">//下一个节点,以链表的形式连接</span><br>        Node&lt;K,V&gt; next;<br>&#125; <br><br><span class="hljs-comment">//当链表中的数量大于等于8时,为了提高查询性能,将会转成红黑树来进行存储</span><br><span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> TREEIFY_THRESHOLD = <span class="hljs-number">8</span>;<br><br><span class="hljs-comment">//默认的负载因子,用于判断是否扩容</span><br><span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">float</span> DEFAULT_LOAD_FACTOR = <span class="hljs-number">0.75f</span>;<br><br><span class="hljs-comment">//默认的初始容量</span><br><span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="hljs-number">1</span> &lt;&lt; <span class="hljs-number">4</span>; <span class="hljs-comment">// aka 16</span><br><br><span class="hljs-comment">//在Map中的键值对数量</span><br><span class="hljs-keyword">transient</span> <span class="hljs-keyword">int</span> size;<br><br><span class="hljs-comment">//下一次扩容的大小</span><br><span class="hljs-keyword">int</span> threshold;<br><br><span class="hljs-comment">//负载因子</span><br><span class="hljs-keyword">final</span> <span class="hljs-keyword">float</span> loadFactor;<br></code></pre></td></tr></table></figure>
+
+<p>HashMap由数组+链表(可能转换成红黑树)组成,数组的优点是可以通过索引直接进行访问,复杂度为O(1),那这个数组要多大才合理呢?另外索引该怎么计算出来才合理呢?很显然,数组不可能无限大,因为我们的内存有限.另外,索引是通过计算hash值来实现的,最理想的情况是我们通过key算出一个hash值,然后对数组的大小取模,恰好每次都能得出一个之前没有用到的索引位置上.但是显然这是不可能的,因为即使hash值不同,但是数组的大小是固定的,那么必然算出的索引有可能会一样,这就导致了碰撞,这样一来就必须在数组的一个索引位置上存放多个元素(如果key是一样的,那么对旧key对应的值进行替换).但是,我们一定会想尽可能的均匀地把元素放到数组的每个位置中,尽量少发生碰撞,因为如果碰撞太多,那么我们设置值和取值就需要遍历链表来完成.这个时候,如何计算hash值使得元素能更均匀分布变得至关重要.</p>
+<p>在源码中,hash值的计算是这样的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-keyword">int</span> <span class="hljs-title">hash</span><span class="hljs-params">(Object key)</span> </span>&#123;<br>        <span class="hljs-keyword">int</span> h;<br>        <span class="hljs-keyword">return</span> (key == <span class="hljs-keyword">null</span>) ? <span class="hljs-number">0</span> : (h = key.hashCode()) ^ (h &gt;&gt;&gt; <span class="hljs-number">16</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>计算索引的代码是这样的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-comment">//n为当前数组大小</span><br>index = (n - <span class="hljs-number">1</span>) &amp; hash <br></code></pre></td></tr></table></figure>
+
+<p>这里把这段代码放在一起是因为它们是有关联的.首先,计算索引的方式使用了&amp;操作,比如数b是2的幂次方的时候,将这个数减去-1,与另外一个数a做&amp;操作,计算的结果就相当于a%b,并且这样的效率会更高,例如17&amp;4=1,7&amp;4=3.</p>
+<p>hash值的计算是这样的:先计算hashCode,将其右移16位,再与本来的hashCode做异或操作,如果直接用hashCode去做&amp;运算,那么可以很明显的看出是低位的值决定了最终计算出来的值是什么,因为高位&amp;0得出的值永远是0.右移的话,可以让高位也参与到整个hash的计算过程.这样的计算方式可以使得计算出来的值的分布更加随机,这跟我们上面所叙述的不谋而合.</p>
 
             </div>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/mysql/">mysql</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/mysql/">mysql</a>
-                    
-                  </div>
                 
               </div>
               
@@ -274,7 +270,7 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/12/20/HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
+                      <a href="/2022/12/27/test/">
                         <i class="iconfont icon-arrowleft"></i>
                         <span class="hidden-mobile"></span>
                         <span class="visible-mobile">上一篇</span>
@@ -284,8 +280,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/11/08/%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81kafka%E7%9A%84%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1/">
-                        <span class="hidden-mobile">怎么保证kafka的消息不丢失</span>
+                      <a href="/2022/11/24/Mysql%E4%B9%8BMVCC%E5%8E%9F%E7%90%86/">
+                        <span class="hidden-mobile">mysql之MVCC原理</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
