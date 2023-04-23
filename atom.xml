@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2023-04-23T19:30:58.574Z</updated>
+  <updated>2023-04-23T17:07:07.089Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,46 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title>test.md</title>
-    <link href="http://example.com/2023/04/24/test-md/"/>
-    <id>http://example.com/2023/04/24/test-md/</id>
-    <published>2023-04-23T18:51:31.000Z</published>
-    <updated>2023-04-23T19:30:58.574Z</updated>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><p><img src="/images/qq2.png" alt="截屏2023-04-23 下午11.38.35"></p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
-      
-    
-    
-    
-    
-  </entry>
-  
-  <entry>
-    <title>test2.md</title>
-    <link href="http://example.com/2023/04/24/test2-md/"/>
-    <id>http://example.com/2023/04/24/test2-md/</id>
-    <published>2023-04-23T18:49:48.000Z</published>
-    <updated>2023-04-23T18:49:48.218Z</updated>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
-      
-    
-    
-    
-    
-  </entry>
   
   <entry>
     <title>HashMap的实现原理</title>
@@ -475,6 +435,54 @@
     
     
     <category term="jvm" scheme="http://example.com/tags/jvm/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>JVM垃圾收集器</title>
+    <link href="http://example.com/2021/06/24/jvm%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/"/>
+    <id>http://example.com/2021/06/24/jvm%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8/</id>
+    <published>2021-06-23T16:34:00.000Z</published>
+    <updated>2021-06-23T18:24:21.702Z</updated>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="JVM垃圾收集器"><a href="#JVM垃圾收集器" class="headerlink" title="JVM垃圾收集器"></a>JVM垃圾收集器</h2><p>JVM垃圾收集器中比较经典的收集器如下图所示:</p><p><img src="/images/jvm_collectors_01.jpg" alt="jvm经典垃圾收集器"></p><p>从图中可以看到,经典垃圾收集器目前有7种,图片米色部分的是新生代收集器,浅绿色部分是老年代收集器,横跨两种颜色的G1既是新生代收集器又是老年代收集器.除了这几个收集器之外,还有一些新版本的低延迟垃圾收集器,比如Shenandoah和ZGC收集器.接下来介绍一下各个收集器.</p><h3 id="Serial"><a href="#Serial" class="headerlink" title="Serial"></a>Serial</h3><p>Serial是新生代垃圾收集器,具有如下特点:</p><ul><li>采取标记复制算法进行垃圾回收</li><li>垃圾回收过程会暂停用户线程,并使用单个线程对垃圾进行回收</li></ul><p>Serial是串行的意思,名字很好的反映了该收集器的特点.</p><h3 id="Serial-Old"><a href="#Serial-Old" class="headerlink" title="Serial Old"></a>Serial Old</h3><p>Serial Old是老年代垃圾收集器,具有如下特点:</p><ul><li>采取标记整理算法进行垃圾回收</li><li>垃圾回收过程会暂停用户线程,并使用单个线程对垃圾进行回收</li></ul><p>和上面的Serial收集器对比,该收集器不同的点就是工作在老年代,垃圾回收的算法不一样.</p><h3 id="ParNew"><a href="#ParNew" class="headerlink" title="ParNew"></a>ParNew</h3><p>从名字中的New可以看出来这是一个新生代垃圾收集器,而名字中的Par代表的意思是并行,代表该收集器会同时开启多个线程来进行垃圾回收,所以可以把它认为是Serial收集器的并行回收版本,特点如下:</p><ul><li>采取标记复制算法进行垃圾回收</li><li>垃圾回收过程会暂停用户线程,并使用多个线程对垃圾进行回收</li></ul><h3 id="Parallel-Scavenge"><a href="#Parallel-Scavenge" class="headerlink" title="Parallel Scavenge"></a>Parallel Scavenge</h3><p>这个收集器也是新生代收集器,其基本特点与ParNew一模一样,除此之外,还有其它特别之处,可以理解为ParNew的加强版.除了ParNew的两个特点之外,特别之处在于这是一个关注吞吐量的收集器,它可以设定两个参数来控制垃圾收集器的吞吐量.首先<code>吞吐量 = 运行用户代码时间/(运行用户代码时间+运行垃圾收集时间.)</code>第一个参数<code>-XX:MaxGCPauseMillis</code>来让垃圾收集器尽可能保证垃圾收集的停顿时间小于这个指定的时间.第二个参数<code>-XX:GCTimeRatio</code>指定了GC时间占垃圾回收时间的比值,计算方式为<code>GC占用时间比例=1/1+指定的值)</code>.除此之外,该收集器还提供了<code>-XX:UseAdaptiveSizePolicy</code>参数来根据运行情况收集性能信息来调整垃圾收集器的参数,这个叫做自适应调节策略.</p><h3 id="Parallel-Old"><a href="#Parallel-Old" class="headerlink" title="Parallel Old"></a>Parallel Old</h3><p>从Old可以看出这是一个老年代收集器,其特点和Parallel Scavenge是一样的,不同之处在于它采用了标记整理算法来对老年代进行收集.</p><h3 id="CMS"><a href="#CMS" class="headerlink" title="CMS"></a>CMS</h3><p>CMS是老年代收集器,是以低停顿为目标的垃圾收集器,采用标记清除算法来清除垃圾,运行过程如下:</p><ol><li>初始标记,标记GC Roots能直接关联到的对象,这个过程需要停顿用户线程.</li><li>并发标记,遍历整个对象图来标记能回收的对象,这个过程可以和用户线程一起并发执行</li><li>重新标记,这个过程标记的是在并发标记时产生的新的垃圾,相当于做一个修正,这个过程需要停顿用户线程</li><li>并发清除,这个过程清理标记了的对象,可以与用户线程一起并发执行.</li></ol><p>CMS被称为低停顿并发收集器,在上面耗时比较长的2和4过程中可以做到和用户线程一起执行,在耗时比较短的1和3过程需要停顿用户线程,总体来说可以认为整个过程是和用户线程一起并发执行,其思想是非常优秀的.但是由于这种设计,也有如下几个缺点:</p><ul><li><p>占用CPU资源.因为与用户线程一起并发执行,那么肯定会和用户线程一起抢占CPU的执行权,这样就会导致用户线程的吞吐量下降,尤其是在CPU核心数较少的情况下.</p></li><li><p>无法处理浮动垃圾.因为在垃圾清除阶段,用户线程还在运行,这个时候老年代可能会产生新的对象,如果这个时候无法找到足够的内存空间进行对象的分配,将会出现Concurrent Mode Failure,此时将会停顿用户线程,改用Serial Old垃圾收集器来进行垃圾回收,这样停顿的时间就更长了.默认情况下,CMS会预留一部分内存空间来分配新对象,可以通过参数<code>-XX:CMSInitiatingOccupancyFraction</code>来指定占用内存的比例为多少时触发CMS的垃圾回收.</p></li><li><p>内存碎片导致无法分配新对象.因为CMS是基于标记清除的垃圾收集器,这会导致它产生大量的内存碎片,可能导致无法找到一块内存去分配新的对象,那么就很容易导致触发FULL GC.所以CMS提供了一个<code>CompactAtFullCollection</code>参数来使得进行Full GC前先进行内存碎片的整理,尝试去找到一块空间来分配新对象,但是这个过程需要移动对象,所以会停顿用户线程.</p></li></ul>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
+      
+    
+    
+    
+    <category term="jvm" scheme="http://example.com/categories/jvm/"/>
+    
+    
+    <category term="jvm" scheme="http://example.com/tags/jvm/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>count(*),count(1),count(column name)的区别</title>
+    <link href="http://example.com/2021/06/23/count-count-1-count-column-name-%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+    <id>http://example.com/2021/06/23/count-count-1-count-column-name-%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
+    <published>2021-06-23T08:56:00.000Z</published>
+    <updated>2021-06-23T16:12:37.419Z</updated>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="count-count-1-count-column-name-的区别"><a href="#count-count-1-count-column-name-的区别" class="headerlink" title="count(*),count(1),count(column name)的区别"></a>count(*),count(1),count(column name)的区别</h2><h3 id="count-vs-count-1"><a href="#count-vs-count-1" class="headerlink" title="count(*) vs count(1)"></a>count(*) vs count(1)</h3><p><code>count(*)</code>和<code>count(1)</code>的功能还有性能是差不多的,这里面括号里面的参数只是一个标识符,如果发现有一行数据,那么就分配一个标识符,最后看有多少标识符而已.<code>count(1)</code>并不是说统计第一行的数据有多少个,<code>count(*)</code>也不是说要把一行的所有列都扫描一遍.如果你不信,你可以试试<code>count(-13)</code>,难道它统计的是-13列的个数?</p><p>那么它们具体是怎么去计算有多少条数据的呢?在只有主键索引的情况下,通过主键索引中索引的个数来计算有多少条数据.在有二级索引的情况下,通过二级索引中索引的个数来计算有多少条数据,如果有多个二级索引,用索引空间占用量小的二级索引来进行计算.</p><h3 id="count-vs-count-column-name"><a href="#count-vs-count-column-name" class="headerlink" title="count(*) vs count(column name)"></a>count(*) vs count(column name)</h3><p><code>count(*)</code>和<code>count(column name)</code>的区别在于<code>count(column name)</code>统计的是某一列字段的个数,其中字段值为NULL的不进行统计.</p><p>那么<code>count(column name)</code>是如何计算有多少条数据的呢?如果有<code>column name</code>对应的二级索引,那么就计算该二级索引的个数(字段值不为NULL).如果没有对应的二级索引,则扫描主键索引,通过判断行数据对应的<code>column name</code>是否为空来进行统计.</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
+      
+    
+    
+    
+    <category term="mysql" scheme="http://example.com/categories/mysql/"/>
+    
+    
+    <category term="mysql" scheme="http://example.com/tags/mysql/"/>
     
   </entry>
   
