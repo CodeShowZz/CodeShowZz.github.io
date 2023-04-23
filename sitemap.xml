@@ -9,6 +9,20 @@
   </url>
   
   <url>
+    <loc>http://example.com/2023/04/24/test-md/</loc>
+    
+    <lastmod>2023-04-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://example.com/2023/04/24/test2-md/</loc>
+    
+    <lastmod>2023-04-23</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://example.com/about/index.html</loc>
     
     <lastmod>2023-04-23</lastmod>
