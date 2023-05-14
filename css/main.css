@@ -301,7 +301,7 @@ sup > a::before,
 }
 html {
   font-size: 16px;
-  font-family: serif;
+  font-family: Microsoft YaHei;
 }
 html,
 body,
@@ -891,7 +891,7 @@ img[lazyload] {
 .markdown-body {
   font-size: 1rem;
   margin-bottom: 2rem;
-  font-family: serif;
+  font-family: Microsoft YaHei;
   color: var(--post-text-color);
 }
 .markdown-body h1,
