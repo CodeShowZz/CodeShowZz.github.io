@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2023-05-16T17:07:19.946Z</updated>
+  <updated>2023-04-23T17:07:07.089Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -15,26 +15,6 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
-  
-  <entry>
-    <title></title>
-    <link href="http://example.com/2023/05/17/concurrentHashMap/"/>
-    <id>http://example.com/2023/05/17/concurrentHashMap/</id>
-    <published>2023-05-16T17:00:11.445Z</published>
-    <updated>2023-05-16T17:07:19.946Z</updated>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="ConcurrencyHashMap"><a href="#ConcurrencyHashMap" class="headerlink" title="ConcurrencyHashMap"></a>ConcurrencyHashMap</h2><p>两个线程同时操作一个concurrtHashMap,但是ConcurrentHashMap的table一开始是空的,如何做到只初始化一次呢?</p>]]></content>
-    
-    
-      
-      
-    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
-      
-    
-    
-    
-    
-  </entry>
   
   <entry>
     <title>HashMap的实现原理</title>
@@ -479,6 +459,30 @@
     
     
     <category term="jvm" scheme="http://example.com/tags/jvm/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>count(*),count(1),count(column name)的区别</title>
+    <link href="http://example.com/2021/06/23/count-count-1-count-column-name-%E7%9A%84%E5%8C%BA%E5%88%AB/"/>
+    <id>http://example.com/2021/06/23/count-count-1-count-column-name-%E7%9A%84%E5%8C%BA%E5%88%AB/</id>
+    <published>2021-06-23T08:56:00.000Z</published>
+    <updated>2021-06-23T16:12:37.419Z</updated>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="count-count-1-count-column-name-的区别"><a href="#count-count-1-count-column-name-的区别" class="headerlink" title="count(*),count(1),count(column name)的区别"></a>count(*),count(1),count(column name)的区别</h2><h3 id="count-vs-count-1"><a href="#count-vs-count-1" class="headerlink" title="count(*) vs count(1)"></a>count(*) vs count(1)</h3><p><code>count(*)</code>和<code>count(1)</code>的功能还有性能是差不多的,这里面括号里面的参数只是一个标识符,如果发现有一行数据,那么就分配一个标识符,最后看有多少标识符而已.<code>count(1)</code>并不是说统计第一行的数据有多少个,<code>count(*)</code>也不是说要把一行的所有列都扫描一遍.如果你不信,你可以试试<code>count(-13)</code>,难道它统计的是-13列的个数?</p><p>那么它们具体是怎么去计算有多少条数据的呢?在只有主键索引的情况下,通过主键索引中索引的个数来计算有多少条数据.在有二级索引的情况下,通过二级索引中索引的个数来计算有多少条数据,如果有多个二级索引,用索引空间占用量小的二级索引来进行计算.</p><h3 id="count-vs-count-column-name"><a href="#count-vs-count-column-name" class="headerlink" title="count(*) vs count(column name)"></a>count(*) vs count(column name)</h3><p><code>count(*)</code>和<code>count(column name)</code>的区别在于<code>count(column name)</code>统计的是某一列字段的个数,其中字段值为NULL的不进行统计.</p><p>那么<code>count(column name)</code>是如何计算有多少条数据的呢?如果有<code>column name</code>对应的二级索引,那么就计算该二级索引的个数(字段值不为NULL).如果没有对应的二级索引,则扫描主键索引,通过判断行数据对应的<code>column name</code>是否为空来进行统计.</p>]]></content>
+    
+    
+      
+      
+    <summary type="html">&lt;link rel=&quot;stylesheet&quot; class=&quot;aplayer-secondary-style-marker&quot; href=&quot;/assets/css/APlayer.min.css&quot;&gt;&lt;script src=&quot;/assets/js/APlayer.min.js&quot; cla</summary>
+      
+    
+    
+    
+    <category term="mysql" scheme="http://example.com/categories/mysql/"/>
+    
+    
+    <category term="mysql" scheme="http://example.com/tags/mysql/"/>
     
   </entry>
   
