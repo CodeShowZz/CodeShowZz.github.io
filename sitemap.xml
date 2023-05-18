@@ -277,7 +277,7 @@
 
   
   <url>
-    <loc>http://example.com/tags/elastic-search/</loc>
+    <loc>http://example.com/tags/abtest/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -291,7 +291,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/abtest/</loc>
+    <loc>http://example.com/tags/elastic-search/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -326,14 +326,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/redis/</loc>
+    <loc>http://example.com/tags/mysql/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/tags/mysql/</loc>
+    <loc>http://example.com/tags/redis/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -347,13 +347,6 @@
   </url>
   
   <url>
-    <loc>http://example.com/tags/zookeeper/</loc>
-    <lastmod>2023-05-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://example.com/tags/spring-cloud/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
@@ -361,7 +354,21 @@
   </url>
   
   <url>
+    <loc>http://example.com/tags/zookeeper/</loc>
+    <lastmod>2023-05-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</loc>
+    <lastmod>2023-05-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://example.com/tags/%E6%95%B0%E6%8D%AE%E6%BA%90/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -381,17 +388,10 @@
     <priority>0.6</priority>
   </url>
   
-  <url>
-    <loc>http://example.com/tags/%E6%95%B0%E6%8D%AE%E6%BA%90/</loc>
-    <lastmod>2023-05-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
 
   
   <url>
-    <loc>http://example.com/categories/elastic-search/</loc>
+    <loc>http://example.com/categories/abtest/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -405,7 +405,7 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/abtest/</loc>
+    <loc>http://example.com/categories/elastic-search/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -440,14 +440,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/redis/</loc>
+    <loc>http://example.com/categories/mysql/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/mysql/</loc>
+    <loc>http://example.com/categories/redis/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -461,14 +461,14 @@
   </url>
   
   <url>
-    <loc>http://example.com/categories/zookeeper/</loc>
+    <loc>http://example.com/categories/spring-cloud/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://example.com/categories/spring-cloud/</loc>
+    <loc>http://example.com/categories/zookeeper/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -489,6 +489,13 @@
   </url>
   
   <url>
+    <loc>http://example.com/categories/%E6%95%B0%E6%8D%AE%E6%BA%90/</loc>
+    <lastmod>2023-05-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://example.com/categories/%E6%95%B0%E6%8D%AE%E6%9D%83%E9%99%90/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
@@ -497,13 +504,6 @@
   
   <url>
     <loc>http://example.com/categories/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2023-05-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://example.com/categories/%E6%95%B0%E6%8D%AE%E6%BA%90/</loc>
     <lastmod>2023-05-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
