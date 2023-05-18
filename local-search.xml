@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title></title>
+    <link href="/2023/05/17/concurrentHashMap/"/>
+    <url>/2023/05/17/concurrentHashMap/</url>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="/assets/css/APlayer.min.css"><script src="/assets/js/APlayer.min.js" class="aplayer-secondary-script-marker"></script><h2 id="ConcurrencyHashMap"><a href="#ConcurrencyHashMap" class="headerlink" title="ConcurrencyHashMap"></a>ConcurrencyHashMap</h2><p>两个线程同时操作一个concurrtHashMap,但是ConcurrentHashMap的table一开始是空的,如何做到只初始化一次呢?</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>HashMap的实现原理</title>
     <link href="/2023/04/24/HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/"/>
     <url>/2023/04/24/HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/</url>
