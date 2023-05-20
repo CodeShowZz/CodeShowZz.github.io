@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      2k 字
+      1.9k 字
     </span>
   
 
@@ -196,7 +196,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      21
+      20
        分钟
     </span>
   
@@ -249,10 +249,10 @@
 <h3 id="如果使用Hash作为索引的数据结构"><a href="#如果使用Hash作为索引的数据结构" class="headerlink" title="如果使用Hash作为索引的数据结构"></a>如果使用Hash作为索引的数据结构</h3><p>Hash能提供O(1)的查询复杂度,对于类似于<code>select * from t where id = 3</code>这种等值匹配来说,性能相当的高,可以说无人能及.但是对于范围查询来说,Hash就有点捉襟见肘了,Hash没办法做到用O(1)的复杂度来进行范围查询,因为这点,Hash是不适合作为底层索引的实现的.</p>
 <h3 id="使用B-Tree还是B-Tree"><a href="#使用B-Tree还是B-Tree" class="headerlink" title="使用B Tree还是B+ Tree"></a>使用B Tree还是B+ Tree</h3><p>那么可选的方案现在只剩下B Tree和B+ Tree.因为这两者的数据结构有点相似,所以在这两个数据结构之间进行选择时,最好是将两者放在一起对比,才能更清楚的知道哪种才是更好的数据结构,.</p>
 <p>首先我们应该清楚B树是如何存储数据的.这里给出一张图片:</p>
-<p>![b tree structure](images/b tree structure.png) </p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgb%20tree%20structure-1684563504291-2.png" srcset="/img/loading.gif" lazyload alt="b tree structure"></p>
 <p>我们现在以聚簇索引来举例,图中的数字代表主键值,后面的*代表该位置是存放实际的行数据的.每个节点的左指针指向下一级的节点,并且左边指向的节点的主键值大小比上一级的小,右边指向的节点的主键值比上一级的大.<b>B Tree的一个重要特点是在每一个节点都存储了完整的行数据</b>.</p>
 <p>B+ Tree存储数据的方式是这样的:</p>
-<p>![B+ Tree Structure](images/B+ Tree Structure.png)</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgB%2B%20Tree%20Structure.png" srcset="/img/loading.gif" lazyload alt="B+ Tree Structure"></p>
 <p>B+ Tree的重要特点是:</p>
 <ol>
 <li><p><b>只有叶子节点才会存放整行数据,而非叶子节点只存储主键值,用于向下搜索</b></p>
