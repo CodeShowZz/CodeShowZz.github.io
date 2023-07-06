@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.9k 字
+      2k 字
     </span>
   
 
@@ -269,7 +269,7 @@
 <p>理解了这两者的区别之后,我们来考虑一下针对实际场景,哪个数据结构才是更好的选择.首先,我们考虑一下等值查询,对于B Tree来说,从根节点的主键值开始进行比较,根据<code>左小右大</code>的特点,可以在某个层级定位到整行数据并返回.对于B+ Tree来说,也是从根节点开始进行比较,不过最终必须定位到叶子节点才能获取到需要的数据.所以在等值查询这个场景下,B Tree看起来比B+ Tree来得好.</p>
 <p>那么考虑一下范围查询,比如B Tree来说,查询数据跟等值查询的模式差不多,只不过需要扫描到多个层级的节点.举个例子,如果在上图中寻找主键大于等于10且小于等于24的行数据.</p>
 <ol>
-<li>首先从根节点12开始,12是满足条件的,所以获取它的行数据,12后面的同级节点24也符合要求,所以也符合要求.</li>
+<li>首先从根节点12开始,12是满足条件的,所以获取它的行数据,12后面的同级节点24也符合要求,所以也获取它的行数据.</li>
 <li>从12的左指针找到下一个节点,第一个节点是8,不符合要求,之后向后找到它的同级节点10,符合要求,后面没有其他节点了,结束.</li>
 <li>节点12的右指针(节点24的左指针)没有指向任何数据,所以无需再找到下一个节点,所有可能的节点都查询过了,查询结束.</li>
 </ol>
@@ -320,12 +320,18 @@
                   <article class="post-prev col-6">
                     
                     
+                      <a href="/2023/05/24/%E6%80%8E%E4%B9%88%E4%BF%9D%E8%AF%81kafka%E7%9A%84%E6%B6%88%E6%81%AF%E4%B8%8D%E4%B8%A2%E5%A4%B1/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">怎么保证Kafka的消息不丢失</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/04/24/HashMap%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/">
-                        <span class="hidden-mobile">HashMap的实现原理</span>
+                      <a href="/2023/05/17/%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/">
+                        <span class="hidden-mobile">五种IO模型</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
