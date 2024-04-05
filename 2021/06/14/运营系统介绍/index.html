@@ -15,7 +15,7 @@
   
   <meta name="theme-color" content="#2f4154">
   <meta name="description" content="">
-  <meta name="author" content="John Doe">
+  <meta name="author" content="君霖">
   <meta name="keywords" content="">
   
   <title>运营系统介绍 - DreamLin&#39;s blog</title>
@@ -238,7 +238,7 @@
             
             <div class="markdown-body">
               <h2 id="运营系统介绍"><a href="#运营系统介绍" class="headerlink" title="运营系统介绍"></a>运营系统介绍</h2><p>每个公司可能会有这样一个系统,它负责给公司的用户发布一些营销信息,比如通过短信的方式或者通过APP消息的方式来触达用户.那么首先应该要有一个用户标签的概念,用户标签指的是用户的特征,比如用户在最近30天内购买过一个理财产品,通过一个或多个特征,我们可以从一个用户库里面筛选出一部分人出来,我们称它为客群.有了客群,我们还需要营销的信息,比如给用户发短信,发优惠券等各种各样能触达到用户的方式,这类信息叫做触点.最后一点是我们将在什么时候触达用户,这个叫做执行时间.总结起来,运营系统最主要的职责便是在某个时间,向特定的用户发布特定的信息.除此之外,在某一次任务执行完成之后,我们还需要追踪任务的执行情况,以获取最终的运营效果.</p>
-<h3 id="功能点"><a href="#功能点" class="headerlink" title="功能点"></a>功能点</h3><p>当然,每个公司的业务不一样,可能运营系统还会承担其它的一些职责,现在介绍一下我之前参与开发的运营系统的功能.如图:<br><img src="/images/operation_system_introduce_01.png" srcset="/img/loading.gif" lazyload alt="功能架构"></p>
+<h3 id="功能点"><a href="#功能点" class="headerlink" title="功能点"></a>功能点</h3><p>当然,每个公司的业务不一样,可能运营系统还会承担其它的一些职责,现在介绍一下我之前参与开发的运营系统的功能.如图:<br><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgoperation_system_introduce_01.png" srcset="/img/loading.gif" lazyload alt="operation_system_introduce_01"></p>
 <h4 id="基础功能"><a href="#基础功能" class="headerlink" title="基础功能"></a>基础功能</h4><p>这一部分主要是建立用户-角色体系,运营系统主要针对的用户不是大众用户,而是服务于公司内部的运营人员.主要由以下几点组成:</p>
 <ul>
 <li>用户</li>
@@ -285,7 +285,7 @@
 <li>广告报表.展示广告下发量、浏览量、点击量等信息.</li>
 </ul>
 <h4 id="形成闭环"><a href="#形成闭环" class="headerlink" title="形成闭环"></a>形成闭环</h4><p>从用户创建任务,到任务执行,再到查看营销结果,整个系统形成了一个闭环,从上面的图中自上而下也能很明显得看出这一点.</p>
-<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><p>在我参与开发的运营系统中,主要用到的技术如下图:<br><img src="/images/operation_system_introduce_02.png" srcset="/img/loading.gif" lazyload alt="技术栈"></p>
+<h3 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h3><p>在我参与开发的运营系统中,主要用到的技术如下图:<br><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgoperation_system_introduce_01-1712292419321-23.png" srcset="/img/loading.gif" lazyload alt="operation_system_introduce_01"></p>
 <h3 id="数据库"><a href="#数据库" class="headerlink" title="数据库"></a>数据库</h3><p>系统主要分为四个模块:</p>
 <ul>
 <li>web模块</li>
@@ -293,7 +293,7 @@
 <li>数据模块</li>
 <li>任务执行模块</li>
 </ul>
-<p>根据模块的职责,各个模块的表情况如下图:<br><img src="/images/operation_system_introduce_03.png" srcset="/img/loading.gif" lazyload alt="数据库"></p>
+<p>根据模块的职责,各个模块的表情况如下图:<br><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgoperation_system_introduce_01-1712292423998-25.png" srcset="/img/loading.gif" lazyload alt="operation_system_introduce_01"></p>
 <h3 id="流程图"><a href="#流程图" class="headerlink" title="流程图"></a>流程图</h3><p>运营系统其实大部分流程并不复杂,这里简单的描述一下短信任务的一个流程,复杂性在于要把系统的各个模块串联起来.主要流程描述如下:</p>
 <ol>
 <li>短信任务执行之前,会有短信模板id的生成(在创建任务的时候会生成,还会有定时任务每天重新生成新的模板id)</li>
@@ -301,9 +301,9 @@
 <li>在任务执行过程中,会记录任务执行的情况(任务发送了多少条短信,调用短信发送接口成功数和失败数).</li>
 <li>每日的短信任务报表的拉取,以此来查看短信最终的触达情况.</li>
 </ol>
-<p>短信任务流程图:<br><img src="/images/operation_system_introduce_04.png" srcset="/img/loading.gif" lazyload alt="短信任务流程"></p>
+<p>短信任务流程图:<br><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgoperation_system_introduce_04.png" srcset="/img/loading.gif" lazyload alt="operation_system_introduce_04"></p>
 <p>再详细一点,短信任务的执行流程图:</p>
-<p><img src="/images/operation_system_introduce_05.png" srcset="/img/loading.gif" lazyload alt="短信任务执行流程"></p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgoperation_system_introduce_05.png" srcset="/img/loading.gif" lazyload alt="operation_system_introduce_05"></p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>这篇文章大致介绍了之前参与开发的运营系统的主要功能,不同的运营系统的设计可能多种多样,需要开发人员发挥想象力,创造更有价值的功能.</p>
 
             </div>
@@ -311,6 +311,20 @@
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1/">方案设计</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%96%B9%E6%A1%88%E8%AE%BE%E8%AE%A1/">方案设计</a>
+                    
+                  </div>
                 
               </div>
               
@@ -325,9 +339,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2021/06/16/RocketMQ%E9%A1%BA%E5%BA%8F%E6%B6%88%E8%B4%B9/">
+                      <a href="/2021/06/21/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">RocketMQ顺序消息</span>
+                        <span class="hidden-mobile">Redis分布式锁</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     

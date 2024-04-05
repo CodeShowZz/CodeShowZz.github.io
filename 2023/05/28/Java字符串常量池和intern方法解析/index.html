@@ -15,7 +15,7 @@
   
   <meta name="theme-color" content="#2f4154">
   <meta name="description" content="">
-  <meta name="author" content="DreamLin">
+  <meta name="author" content="君霖">
   <meta name="keywords" content="">
   
   <title>Java字符串常量池和intern方法解析 - DreamLin&#39;s blog</title>
@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      2.6k 字
+      2.7k 字
     </span>
   
 
@@ -196,7 +196,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      29
+      30
        分钟
     </span>
   
@@ -237,66 +237,63 @@
             <h1 style="display: none">Java字符串常量池和intern方法解析</h1>
             
             <div class="markdown-body">
-              <hr>
-<h1 id="Java字符串常量池和intern方法解析"><a href="#Java字符串常量池和intern方法解析" class="headerlink" title="Java字符串常量池和intern方法解析"></a>Java字符串常量池和intern方法解析</h1><p>这篇文章,来讨论一下Java中的字符串常量池以及Intern方法.这里我们主要讨论的是jdk1.7,jdk1.8版本的实现.</p>
+              <p>这篇文章,来讨论一下Java中的字符串常量池以及Intern方法.这里我们主要讨论的是jdk1.7,jdk1.8版本的实现.</p>
 <h2 id="字符串常量池"><a href="#字符串常量池" class="headerlink" title="字符串常量池"></a>字符串常量池</h2><p>在日常开发中,我们使用字符串非常的频繁,我们经常会写下类似如下的代码:</p>
 <ul>
 <li>String s = “abc”;</li>
 <li>String str = s + “def”;</li>
 </ul>
-<p>通常,我们一般不会这么写:<code>String s = new String(&quot;jkl&quot;)</code>,但其实这么写和上面的写法还是有很多区别的.</p>
-<p>先思考一个问题,为什么要有<code>字符串常量池</code>这种概念?原因是字符串常量既然是不变的,那么完全就可以复用它,而不用再重新去浪费空间存储一个完全相同的字符串.<b>字符串常量池是用于存放字符串常量的地方,在Java7和Java8中字符串常量池是堆的一部分</b>.</p>
+<p>通常,我们一般不会这么写:String s = new String(“jkl”),但其实这么写和上面的写法还是有很多区别的.</p>
+<p>先思考一个问题,为什么要有字符串常量池这种概念?原因是字符串常量既然是不变的,那么完全就可以复用它,而不用再重新去浪费空间存储一个完全相同的字符串.<strong>字符串常量池是用于存放字符串常量的地方,在Java7和Java8中字符串常量池是堆的一部分</strong>.</p>
 <p>假如我们有如下代码:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java">String s = <span class="hljs-string">&quot;abc&quot;</span>;<br>String s1 = s + <span class="hljs-string">&quot;def&quot;</span>;    <br>String s2 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;abc&quot;</span>);<br>String s3 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;def&quot;</span>);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plain">String s &#x3D; &quot;abc&quot;;<br>String s1 &#x3D; s + &quot;def&quot;;    <br>String s2 &#x3D; new String(&quot;abc&quot;);<br>String s3 &#x3D; new String(&quot;def&quot;);<br></code></pre></td></tr></table></figure>
 
-<p>那么从内存分配的角度上看,最终会有哪些字符串生成呢,首先我先给出一张图来代表最终的结论,然后再分析一下具体的原因:</p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgimage-20230528000325643.png" srcset="/img/loading.gif" lazyload alt="image-20230528000325643"></p>
+<p>那么从内存分配的角度上看,最终会有哪些字符串生成呢,首先我先给出一张图来代表最终的结论,然后再分析一下具体的原因:<img src="https://cdn.nlark.com/yuque/0/2024/png/22278782/1705474120322-4bad460b-f18f-4ab7-8d3a-341a49c49dc9.png" srcset="/img/loading.gif" lazyload alt="img"></p>
 <p>现在来依次分析上面的代码的执行流程:</p>
 <ol>
 <li>执行String s = “abc”,此时遇到”abc”这个字符串常量,会在字符串常量池中完成分配,并且会将引用赋值给s,因此这条语句会在字符串常量池中分配一个”abc”.(这里其实没有空格,是因为生成文章时出现了空格,下文中如果出现同样情况,请忽略空格)</li>
-<li>执行String s1 = s + “def”,其实这个语句看似简单,实则另有玄机,它其实最终编译而成的代码是这样的:<code>String s1 = new StringBuilder(&quot;abc&quot;).append(&quot;def&quot;).toString()</code>.首先在这个语句中有两个字符串常量:”abc”和”def”,所以在字符串常量池中应该放置”abc”和”def”,但是上个步骤已经有”abc”了,所以只会放置”def”.另外,new StringBuilder(“abc”)这个语句相当于在堆上分配了一个对象,<b>如果是<code>new</code>出来的,是在堆上分配字符串,是无法共享字符串常量池里面的字符串的,也就是说分配到堆上的字符串都会有新的内存空间.</b>最后toString()也是在堆中分配对象(可以从源码中看到这个动作),最终相当于执行了new String(“abcdef”);所以总结起来,这条语句分析起来还是挺麻烦的,它分配了以下对象: <ul>
+<li>执行String s1 = s + “def”,其实这个语句看似简单,实则另有玄机,它其实最终编译而成的代码是这样的:String s1 = new StringBuilder(“abc”).append(“def”).toString().首先在这个语句中有两个字符串常量:”abc”和”def”,所以在字符串常量池中应该放置”abc”和”def”,但是上个步骤已经有”abc”了,所以只会放置”def”.另外,new StringBuilder(“abc”)这个语句相当于在堆上分配了一个对象,<strong>如果是**</strong>new**<strong>出来的,是在堆上分配字符串,是无法共享字符串常量池里面的字符串的,也就是说分配到堆上的字符串都会有新的内存空间.</strong> 最后toString()也是在堆中分配对象(可以从源码中看到这个动作),最终相当于执行了new String(“abcdef”);所以总结起来,这条语句分析起来还是挺麻烦的,它分配了以下对象:</li>
+</ol>
+<ul>
+<li><ul>
 <li>在字符串常量池分配”abc”,但本来就有一个”abc”了,所以不需要分配</li>
 <li>在字符串常量池中分配“def”</li>
-<li>在堆中分配了”abc”</li>
+<li>在堆中分配了”abc”,然后被扩展成”abcdef”,再之后可能被垃圾回收,这个只是临时为了产生String对象而产生的对象</li>
 <li>在堆中分配了”abcdef”</li>
 </ul>
 </li>
+</ul>
+<ol>
 <li>执行String s2 = new String(“abc”).首先有个字符串常量”abc”,需要分配到字符串常量池,但是字符串常量池中已经有”abc”了,所以无需分配.因此new String(“abc”)最终在堆上分配了一个”abc”.所以总结起来就是,在堆中分配了一个”abc”</li>
 <li>执行String s3 = new String(“def”);.首先有个字符串常量”def”,需要分配到字符串常量池,但是字符串常量池中已经有”def”了,所以无需分配.因此new String(“def”)最终在堆上分配了一个”def”.所以总结起来就是,在堆中分配了一个”def”。</li>
 </ol>
 <p>总结起来,全部语句执行后分配的对象如下:</p>
 <ul>
-<li><p>在堆中分配了两个”abc”,一个”abcdef”,一个”def”</p>
-</li>
-<li><p>在字符串常量池中分配了一个”abc”,一个”def”</p>
-</li>
+<li>在堆中分配了一个”abc”,两个”abcdef”(其中一个只是为了产生String而临时产生的对象),一个”def”</li>
+<li>在字符串常量池中分配了一个”abc”,一个”def”</li>
 </ul>
 <p>也就是图中所表示的这些对象,如果明白了对象是如何分配的,我们就可以分析以下代码的结果:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java">String s = <span class="hljs-string">&quot;abc&quot;</span>;<br>String s1 = s + <span class="hljs-string">&quot;def&quot;</span>;    <br>String s2 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;abc&quot;</span>);<br>String s3 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;def&quot;</span>);<br>String s4 = <span class="hljs-string">&quot;abcdef&quot;</span>;<br>String s5 = <span class="hljs-string">&quot;abc&quot;</span>;<br>System.out.println(s == s2); <span class="hljs-comment">//false 前者引用的对象在字符串常量池 后者在堆上</span><br>System.out.println(s == s5);; <span class="hljs-comment">//true 都引用了字符串常量池中的&quot;abc&quot;</span><br>System.out.println(s1 == s4); <span class="hljs-comment">//false 前者引用的对象在字符串常量池,后者在堆上</span><br></code></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java">String s = <span class="hljs-string">&quot;abc&quot;</span>;<br>String s1 = s + <span class="hljs-string">&quot;def&quot;</span>;<br>String s2 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;abc&quot;</span>);<br>String s3 = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;def&quot;</span>);<br>String s4 = <span class="hljs-string">&quot;abcdef&quot;</span>;<br>String s5 = <span class="hljs-string">&quot;abc&quot;</span>;<br>System.out.println(s == s2); <span class="hljs-comment">//false 前者引用的对象在字符串常量池 后者在堆上</span><br>System.out.println(s == s5);; <span class="hljs-comment">//true 都引用了字符串常量池中的&quot;abc&quot;</span><br>System.out.println(s1 == s4); <span class="hljs-comment">//false 前者引用的对象在堆上，后者在字符串常量池中</span><br></code></pre></td></tr></table></figure>
 
-<h2 id="intern方法"><a href="#intern方法" class="headerlink" title="intern方法"></a>intern方法</h2><p>在字符串对象中,有一个<code>intern</code>方法.在jdk1.7,jdk1.8中,它的定义是<code>如果调用这个方法时,在字符串常量池中有对应的字符串,那么返回字符串常量池中的引用,否则返回调用时相应对象的引用</code>,也就是说intern方法在jdk1.7,jdk1.8中只会复用某个字符串的引用,<b>这个引用可以是对堆内存中字符串中的引用,也可能是对字符串常量池中字符串的引用</b>.这里通过一个例子来说明,假如我们有下面这段代码:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs java">String str = <span class="hljs-keyword">new</span> String(<span class="hljs-string">&quot;abc&quot;</span>);<br>String str2 = str.intern();<br>String str3 = <span class="hljs-keyword">new</span> StringBuilder(<span class="hljs-string">&quot;abc&quot;</span>).append(<span class="hljs-string">&quot;def&quot;</span>).toString();<br>String str4 = str3.intern();<br>System.out.println(str == str2);<br>System.out.println(str3 == str4);   <br></code></pre></td></tr></table></figure>
+<h2 id="intern方法"><a href="#intern方法" class="headerlink" title="intern方法"></a>intern方法</h2><p>在字符串对象中,有一个intern方法.在jdk1.7,jdk1.8中,它的定义是如果调用这个方法时,在字符串常量池中有对应的字符串,那么返回字符串常量池中的引用,否则返回调用时相应对象的引用,也就是说intern方法在jdk1.7,jdk1.8中只会复用某个字符串的引用,<strong>这个引用可以是对堆内存中字符串中的引用,也可能是对字符串常量池中字符串的引用</strong>.这里通过一个例子来说明,假如我们有下面这段代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs plain">String str &#x3D; new String(&quot;abc&quot;);<br>String str2 &#x3D; str.intern();<br>String str3 &#x3D; new StringBuilder(&quot;abc&quot;).append(&quot;def&quot;).toString();<br>String str4 &#x3D; str3.intern();<br>System.out.println(str &#x3D;&#x3D; str2);<br>System.out.println(str3 &#x3D;&#x3D; str4);<br></code></pre></td></tr></table></figure>
 
 <p>那么str2和str以及str3和str4是否相等呢?如果理解了上面对字符串常量池的分析,那么我们可以明白在这段代码中,字符串在内存中是这么分配的:</p>
 <ul>
-<li>在堆中分配两个”abc”,一个“abcdef”</li>
+<li>在堆中分配一个”abc”,一个“abcdef”,一个即将被垃圾回收的”abcdef”</li>
 <li>在字符串常量池中分配一个”def”,一个”abc”</li>
 </ul>
 <ol>
-<li><p>当执行String str2 = str.intern();时,会先从字符串常量池中寻找是否有对应的字符串,此时在字符串常量池中有一个”abc”,那么str2就指向字符串常量池中的”abc”,而str是new出来的,指向的是堆中的”abc”,所以str不等于str2;</p>
-</li>
-<li><p>当执行String str4 = str3.intern();会先从字符串常量池中寻找”abcdef”,此时字符串常量池中并没有”abcdef”,因此str4会指向堆中的”abcdef”,因此str3等于str4,我们会发现一个有意思的地方:如果将第三句改成<code>String str3 = new StringBuilder(&quot;abcdef&quot;).toString();</code>,也就是把append后面的字符串和前面的字符串做一个拼接,那么结果就会变成str3不等于str4.所以这两种写法的区别还是挺大的.</p>
-</li>
+<li>当执行String str2 = str.intern();时,会先从字符串常量池中寻找是否有对应的字符串,此时在字符串常量池中有一个”abc”,那么str2就指向字符串常量池中的”abc”,而str是new出来的,指向的是堆中的”abc”,所以str不等于str2;</li>
+<li>当执行String str4 = str3.intern();会先从字符串常量池中寻找”abcdef”,此时字符串常量池中并没有”abcdef”,因此str4会指向堆中的”abcdef”,因此str3等于str4,我们会发现一个有意思的地方:如果将第三句改成String str3 = new StringBuilder(“abcdef”).toString();,也就是把append后面的字符串和前面的字符串做一个拼接,那么结果就会变成str3不等于str4.所以这两种写法的区别还是挺大的.</li>
 </ol>
-<p>要注意的是,在jdk1.6中intern的定义是<code>如果字符串常量池中没有对应的字符串,那么就在字符串常量池中创建一个字符串,然后返回字符串常量池中的引用</code>,也就是说<b>在jdk1.6中,intern方法返回的对象始终都是指向字符串常量池的</b>.如果上面的代码在jdk1.6中运行,那么就会得到两个false,原因如下:</p>
+<p>要注意的是,在jdk1.6中intern的定义是如果字符串常量池中没有对应的字符串,那么就在字符串常量池中创建一个字符串,然后返回字符串常量池中的引用,也就是说<strong>在jdk1.6中,intern方法返回的对象始终都是指向字符串常量池的</strong>.如果上面的代码在jdk1.6中运行,那么就会得到两个false,原因如下:</p>
 <ol>
-<li><p>当执行String str2 = str.intern();时,会先从字符串常量池中寻找是否有对应的字符串,此时在字符串常量池中有一个”abc”,那么str2就指向字符串常量池中的”abc”,而str是new出来的,指向的是堆中的”abc”,所以str不等于str2;</p>
-</li>
-<li><p>当执行String str4 = str3.intern();会先从字符串常量池中寻找”abcdef”,此时字符串常量池中并没有”abcdef”,因此执行intern方法会在字符串常量池中分配”abcdef”,然后str4最终等于这个字符串的引用,因此str3不等于str4,因为上面的str3指向堆,而str4指向字符串常量池,所以两者一定不会相等.</p>
-</li>
+<li>当执行String str2 = str.intern();时,会先从字符串常量池中寻找是否有对应的字符串,此时在字符串常量池中有一个”abc”,那么str2就指向字符串常量池中的”abc”,而str是new出来的,指向的是堆中的”abc”,所以str不等于str2;</li>
+<li>当执行String str4 = str3.intern();会先从字符串常量池中寻找”abcdef”,此时字符串常量池中并没有”abcdef”,因此执行intern方法会在字符串常量池中分配”abcdef”,然后str4最终等于这个字符串的引用,因此str3不等于str4,因为上面的str3指向堆,而str4指向字符串常量池,所以两者一定不会相等.</li>
 </ol>
-<p>在<code>深入理解JVM虚拟机</code>一书中,就有类似的代码:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs java">String str1 = <span class="hljs-keyword">new</span> StringBuilder(<span class="hljs-string">&quot;计算机&quot;</span>).append(<span class="hljs-string">&quot;软件&quot;</span>).toString();<br>System.out.println(str1 == str1.intern());<br>String str2 = <span class="hljs-keyword">new</span> StringBuilder(<span class="hljs-string">&quot;ja&quot;</span>).append(<span class="hljs-string">&quot;va&quot;</span>).toString();<br>System.out.println(str2 == str2.intern());<br></code></pre></td></tr></table></figure>
+<p>在深入理解JVM虚拟机一书中,就有类似的代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs plain">String str1 &#x3D; new StringBuilder(&quot;计算机&quot;).append(&quot;软件&quot;).toString();<br>System.out.println(str1 &#x3D;&#x3D; str1.intern());<br>String str2 &#x3D; new StringBuilder(&quot;ja&quot;).append(&quot;va&quot;).toString();<br>System.out.println(str2 &#x3D;&#x3D; str2.intern());<br></code></pre></td></tr></table></figure>
 
 <p>在jdk1.6中,两个判断都为false.因为str1和str2都指向堆,而intern方法得出来的引用都指向字符串常量池,所以不会相等,和上面叙述的结论是一样的.在jdk1.7中,第一个是true,第二个是false.道理其实也和上述所讲的是一样的,对于第一个语句,最终会在堆上创建一个”计算机软件”的字符串,执行str1.intern()方法时,先在字符串常量池中寻找字符串,但没有找到,所以会直接引用堆上的这个”计算机软件”,因此第一个语句会返回true,因为最终都是指向堆.而对于第三个语句,因为和第一个语句差不多,按理说最终比较也应该返回true.但实际上,str2.intern方法执行的时候,在字符串常量池中是可以找到”java”这个字符串的,这是因为在Java初始化环境去加载类的时候(执行main方法之前),已经有一个叫做”java”的字符串进入了字符串常量池,因此str2.intern方法返回的引用是指向字符串常量池的,所以最终判断的结果是false,因为一个指向堆,一个指向字符串常量池.</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>从上面的分析看来,字符串常量池并不像是那种很简单的概念,要深刻理解字符串常量池,至少需要理解以下几点:</p>
@@ -315,6 +312,20 @@
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/JVM/">JVM</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/JVM/">JVM</a>
+                    
+                  </div>
                 
               </div>
               
@@ -328,6 +339,12 @@
                 <div class="post-prevnext">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2024/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Java equals和hashCode方法规范</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

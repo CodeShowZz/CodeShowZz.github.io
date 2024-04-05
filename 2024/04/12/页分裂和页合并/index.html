@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.jpeg">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="君霖">
+  <meta name="keywords" content="">
+  
+  <title>页分裂和页合并 - DreamLin&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.10","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":"UhRMzm4UBwjZ39Tb3jiGMw50-gzGzoHsz","app_key":"NSDo7qYLV7ycIWFGVYfFbCln","server_url":"https://uhrmzm4u.lc-cn-n1-shared.com"}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="DreamLin's blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>DreamLin's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="页分裂和页合并">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2024-04-12 15:55" pubdate>
+        2024年4月12日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      1k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      10
+       分钟
+    </span>
+  
+
+  
+  
+    
+      <!-- LeanCloud 统计文章PV -->
+      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+        <i class="iconfont icon-eye" aria-hidden="true"></i>
+        <span id="leancloud-page-views"></span> 次
+      </span>
+    
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">页分裂和页合并</h1>
+            
+            <div class="markdown-body">
+              <hr>
+<h2 id="mysql表数据组成"><a href="#mysql表数据组成" class="headerlink" title="mysql表数据组成"></a>mysql表数据组成</h2><p>一个表通常由一个.ibd文件所表示,一个文件又由N个段组成,每个段关联一个索引.一个段又由多个区组成,而每个区又由多个页组成,默认情况下,区的大小为1MB,页的大小为16KB,一个区中最多可以存放64个页.一个页至少需要存放两行数据,因此页中的行数据的长度最长为8KB,而每行数据有多大,由表的模式所决定,通常表的模式又由一个.frm文件所表示.一张图片可以更形象的表达一些概念:</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933413169-ac3a5f8e-61bd-4ad1-8836-50692a4d038c.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h2 id="页的组成"><a href="#页的组成" class="headerlink" title="页的组成"></a>页的组成</h2><p>Mysql中操作数据的最小单位不是行,而是页,这意味着Mysql不会单独从磁盘上查询一行记录,而是至少查到一个页,然后从中获取行记录.在主键索引的叶子节点中,数据将按照主键大小按顺序存放在页中,页和页之间通过双向链表进行连接,这也就意味着在物理上相邻的两个页不一定是按顺序的.我们所讨论的页分裂和页合并中的”页”具体指的就是主键索引的叶子节点.</p>
+<h2 id="页的内部"><a href="#页的内部" class="headerlink" title="页的内部"></a>页的内部</h2><p>一个具体的页的样子如下图,主键ID依次为1,2,3,4,通常页中有一个50%的阈值用于合并操作,也就是页大小的一半.</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899508328-48745c0e-41f7-4d12-b5e9-295099bc6137.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>数据将按顺序插入页中:</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933887707-a0dabc90-ea98-4959-8ea9-f46f07f93418.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>如果数据无法存放在当前页,那么将存放在下一个页中</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933959403-8d86ad3c-0a3f-4beb-a79e-3078a2af470a.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h2 id="页合并"><a href="#页合并" class="headerlink" title="页合并"></a>页合并</h2><p>如果页中的数据被删除,那么实际上这块的空间并不会被回收,而是标记为可重复利用.当一个页的数据被删除或者更新,空间小于所规定的阈值大小,那么Mysql会查找前一个页,和后一个页,判断是否可以将这个页合并到另外一个页,这样就可以节省下一个页的空间.以下是Page5和Page6的一个合并过程:</p>
+<ol>
+<li>Page5的一些数据被删除,并且空间降到了阈值之下</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899710734-d9bbd9e2-432b-4d95-b159-e83ed11cd5f8.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>Page5的下一个页Page6的数据此时不到一半,并且这些数据可以放入Page5</li>
+</ol>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img src="https://cdn.nlark.com/yuque/0/2023/png/22278782/1697899842787-6a83fef1-da67-496f-83e8-872a802812f2.png" srcset="/img/loading.gif" lazyload alt="img"></h2><ol>
+<li>进行页合并操作</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899897659-7c0c55a9-7555-42cd-8466-5ddf30c1257f.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>Page6变成了空页,用于存放新的数据</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899974126-ded6a603-8052-41b6-8456-7d2a2e2c6196.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<h2 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a>页分裂</h2><p>如果一个页快满了,此时我们插入数据,但下一个页的空间也全部占满.这个时候Mysql将创建一个新页,然后将快满的这个页的部分数据迁移到新页中,这部分数据就是超出原来那个页阈值的那部分数据,之后再插入新的数据.以下是一个页分裂过程:</p>
+<ol>
+<li>往Page10插入数据,但此时该页已没有空间可以容纳</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900364335-2f8d0db7-59bf-4317-918a-044ff71faa06.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>Page10的下一个页Page11也没有空间可以容纳,并且27这个数据是要插入到28之前的.</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900393905-7e7a8451-6c7b-4e95-908c-88096f272514.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>此时创建一个新页Page12,将Page10的24-26号数据迁移到新页,并插入27</li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900503279-f3d04b9c-015f-4389-b5ec-f6c8e3980684.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900462918-31189d4e-2232-4e88-aba1-76af0cd091b2.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<ol>
+<li>修改页之间的链接关系,Page10的下一个页此时是Page12而不是Page11,因此页并不是物理连续的,而是逻辑连续的.两个相邻的页可能存放在不同的区中.</li>
+</ol>
+<h2 id="索引设计带来的影响"><a href="#索引设计带来的影响" class="headerlink" title="索引设计带来的影响"></a>索引设计带来的影响</h2><p>假如我们有个主键,如果我们使用自增id,那么产生的页分裂和页合并会比较少,但是如果我们使用无规则的id,那么大概率会使得整个数据分布得很稀疏,进而给性能带来以下影响:</p>
+<ul>
+<li>使用了更多的页,浪费更多的磁盘空间</li>
+<li>数据分布在很多稀疏的页中,加载页也需要CPU时间,那么可能导致获取数据时间变长</li>
+<li>页合并和页分裂进行过程会带来性能影响</li>
+</ul>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://www.percona.com/blog/innodb-page-merging-and-page-splitting/">https://www.percona.com/blog/innodb-page-merging-and-page-splitting/</a></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/mysql/">mysql</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/mysql/">mysql</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/05/CDN%E5%8E%9F%E7%90%86/">
+                        <span class="hidden-mobile">CDN原理</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments" lazyload>
+                
+                  
+                
+                
+  <div id="valine"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#valine', function() {
+      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
+        new Valine({
+          el: "#valine",
+          app_id: "UhRMzm4UBwjZ39Tb3jiGMw50-gzGzoHsz",
+          app_key: "NSDo7qYLV7ycIWFGVYfFbCln",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "retro",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: false,
+          recordIP: false,
+          serverURLs: "https://uhrmzm4u.lc-cn-n1-shared.com",
+        });
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.8/dist/clipboard.min.js" ></script>
+
+
+
+
+  <script defer src="/js/leancloud.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/mermaid@8.9.2/dist/mermaid.min.js" ></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({"theme":"default"});
+    }
+  </script>
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+  
+<script src="/js/diy/background.js"></script>
+<script src="/js/diy/mouse.js"></script>
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>

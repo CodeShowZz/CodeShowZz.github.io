@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      2k 字
+      1.9k 字
     </span>
   
 
@@ -238,27 +238,26 @@
             
             <div class="markdown-body">
               <hr>
-<h1 id="为什么Mysql使用B-树来实现索引"><a href="#为什么Mysql使用B-树来实现索引" class="headerlink" title="为什么Mysql使用B+树来实现索引"></a>为什么Mysql使用B+树来实现索引</h1><p>这篇文章,主要来探讨一下为什么Mysql使用B+树来实现索引,这里讨论的目标是Mysql的<code>InnoDB</code>存储引擎.可以想象一下,如果你是Mysql的开发人员,你会怎么去选择合适的数据结构呢?</p>
+<ul>
+<li><h1 id="为什么Mysql使用B-树来实现索引"><a href="#为什么Mysql使用B-树来实现索引" class="headerlink" title="为什么Mysql使用B+树来实现索引"></a>为什么Mysql使用B+树来实现索引</h1><p>这篇文章,主要来探讨一下为什么Mysql使用B+树来实现索引,这里讨论的目标是Mysql的InnoDB存储引擎.可以想象一下,如果你是Mysql的开发人员,你会怎么去选择合适的数据结构呢?</p>
 <h2 id="从实际场景出发"><a href="#从实际场景出发" class="headerlink" title="从实际场景出发"></a>从实际场景出发</h2><p>任何数据结构都是为了解决特定问题而产生的,那么如果一个用户使用Mysql,通常会有哪些需求呢?我们可以很容易的想到最简单的需求:</p>
 <ol>
 <li>通过id或者其他列值进行匹配查询</li>
 <li>通过id进行范围查询</li>
 </ol>
 <p>用户肯定希望查询的性能越高越好,对于一个表来说,如果能直接通过索引来查询到数据,不必进行全表扫描,那就再好不过了.</p>
-<h2 id="选择合适的数据结构"><a href="#选择合适的数据结构" class="headerlink" title="选择合适的数据结构"></a>选择合适的数据结构</h2><p>这个时候,Mysql的开发人员就会为了解决用户的查询性能问题,开始选择合适的数据结构.能想到的备选方案可能有<code>Hash</code>,<code>B Tree</code>,<code>B+ Tree</code>这三种数据结构.</p>
-<h3 id="如果使用Hash作为索引的数据结构"><a href="#如果使用Hash作为索引的数据结构" class="headerlink" title="如果使用Hash作为索引的数据结构"></a>如果使用Hash作为索引的数据结构</h3><p>Hash能提供O(1)的查询复杂度,对于类似于<code>select * from t where id = 3</code>这种等值匹配来说,性能相当的高,可以说无人能及.但是对于范围查询来说,Hash就有点捉襟见肘了,Hash没办法做到用O(1)的复杂度来进行范围查询,因为这点,Hash是不适合作为底层索引的实现的.</p>
+<h2 id="选择合适的数据结构"><a href="#选择合适的数据结构" class="headerlink" title="选择合适的数据结构"></a>选择合适的数据结构</h2><p>这个时候,Mysql的开发人员就会为了解决用户的查询性能问题,开始选择合适的数据结构.能想到的备选方案可能有Hash,B Tree,B+ Tree这三种数据结构.</p>
+<h3 id="如果使用Hash作为索引的数据结构"><a href="#如果使用Hash作为索引的数据结构" class="headerlink" title="如果使用Hash作为索引的数据结构"></a>如果使用Hash作为索引的数据结构</h3><p>Hash能提供O(1)的查询复杂度,对于类似于select * from t where id = 3这种等值匹配来说,性能相当的高,可以说无人能及.但是对于范围查询来说,Hash就有点捉襟见肘了,Hash没办法做到用O(1)的复杂度来进行范围查询,因为这点,Hash是不适合作为底层索引的实现的.</p>
 <h3 id="使用B-Tree还是B-Tree"><a href="#使用B-Tree还是B-Tree" class="headerlink" title="使用B Tree还是B+ Tree"></a>使用B Tree还是B+ Tree</h3><p>那么可选的方案现在只剩下B Tree和B+ Tree.因为这两者的数据结构有点相似,所以在这两个数据结构之间进行选择时,最好是将两者放在一起对比,才能更清楚的知道哪种才是更好的数据结构,.</p>
 <p>首先我们应该清楚B树是如何存储数据的.这里给出一张图片:</p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgb%20tree%20structure-1684563504291-2.png" srcset="/img/loading.gif" lazyload alt="b tree structure"></p>
-<p>我们现在以聚簇索引来举例,图中的数字代表主键值,后面的*代表该位置是存放实际的行数据的.每个节点的左指针指向下一级的节点,并且左边指向的节点的主键值大小比上一级的小,右边指向的节点的主键值比上一级的大.<b>B Tree的一个重要特点是在每一个节点都存储了完整的行数据</b>.</p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705975752704-34f6c018-791b-4437-b476-195540295aba.png" srcset="/img/loading.gif" lazyload alt="img"></p>
+<p>我们现在以聚簇索引来举例,图中的数字代表主键值,后面的*代表该位置是存放实际的行数据的.每个节点的左指针指向下一级的节点,并且左边指向的节点的主键值大小比上一级的小,右边指向的节点的主键值比上一级的大.<strong>B Tree的一个重要特点是在每一个节点都存储了完整的行数据</strong>.</p>
 <p>B+ Tree存储数据的方式是这样的:</p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgB%2B%20Tree%20Structure.png" srcset="/img/loading.gif" lazyload alt="B+ Tree Structure"></p>
+<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/imgimage-20240405124105325.png" srcset="/img/loading.gif" lazyload alt="image-20240405124105325"></p>
 <p>B+ Tree的重要特点是:</p>
 <ol>
-<li><p><b>只有叶子节点才会存放整行数据,而非叶子节点只存储主键值,用于向下搜索</b></p>
-</li>
-<li><p><b>叶子节点冗余了所有的主键值,并存储行数据,并且每个节点之间用双向链表进行连接</b></p>
-</li>
+<li><strong>只有叶子节点才会存放整行数据,而非叶子节点只存储主键值,用于向下搜索</strong></li>
+<li><strong>叶子节点冗余了所有的主键值,并存储行数据,并且每个节点之间用双向链表进行连接</strong></li>
 </ol>
 <p>在图中的12这个节点中,后面是指向24这个节点的,在图中被省略了.</p>
 <p>在这里,我们再强调一下B Tree和B+ Tree的重要区别:</p>
@@ -266,7 +265,7 @@
 <li>B Tree的每个节点都存储行数据,而B+ Tree只有叶子节点存放行数据.</li>
 <li>B Tree因为每个节点都存储行数据,所以没有必要在非叶子节点再冗余任何数据.B+ Tree因为只有叶子节点存储行数据,所以需要在最后一层冗余所有的主键值,并存储行数据,且节点之间用链表进行连接.</li>
 </ol>
-<p>理解了这两者的区别之后,我们来考虑一下针对实际场景,哪个数据结构才是更好的选择.首先,我们考虑一下等值查询,对于B Tree来说,从根节点的主键值开始进行比较,根据<code>左小右大</code>的特点,可以在某个层级定位到整行数据并返回.对于B+ Tree来说,也是从根节点开始进行比较,不过最终必须定位到叶子节点才能获取到需要的数据.所以在等值查询这个场景下,B Tree看起来比B+ Tree来得好.</p>
+<p>理解了这两者的区别之后,我们来考虑一下针对实际场景,哪个数据结构才是更好的选择.首先,我们考虑一下等值查询,对于B Tree来说,从根节点的主键值开始进行比较,根据左小右大的特点,可以在某个层级定位到整行数据并返回.对于B+ Tree来说,也是从根节点开始进行比较,不过最终必须定位到叶子节点才能获取到需要的数据.所以在等值查询这个场景下,B Tree看起来比B+ Tree来得好.</p>
 <p>那么考虑一下范围查询,比如B Tree来说,查询数据跟等值查询的模式差不多,只不过需要扫描到多个层级的节点.举个例子,如果在上图中寻找主键大于等于10且小于等于24的行数据.</p>
 <ol>
 <li>首先从根节点12开始,12是满足条件的,所以获取它的行数据,12后面的同级节点24也符合要求,所以也获取它的行数据.</li>
@@ -278,13 +277,15 @@
 <ol>
 <li>从根节点12向左找到下一级的10这个节点,从10的左指针找到10所在的叶子节点,因为叶子节点是链表结构,那么可以从这个叶子节点的指针一直往后定位到24这个节点,然后返回这中间的所有数据.</li>
 </ol>
-<p>实际上数据最终都是存储到磁盘上的,对于Mysql来说,数据是以页为单位来存储数据,通常为4KB,在上面的图中,我们可以理解成每一个大的长方形框是一个页,而每个页里面存放了很多节点,对于B Tree来说,每个页的节点都存放整行数据,对于B+ Tree来说,非叶子页的节点只存放id,也被称为<code>索引页</code>，而叶子节点存放整行数据.对于页的读取,就涉及到IO操作,要知道IO读取数据的速度比从内存读取数据要慢得多,通常读取页的时间在10ms左右.</p>
-<p>以范围查询为例,我们从IO的角度来概括一下B Tree和B+ Tree的区别.对于B  Tree而言,读取根节点需要一次IO操作,加载出页之后,当前页的数据可能只有部分符合要求,然后根据页的指针再进行IO操作,找到另外的页,整个过程需要更多的IO操作,并且因为每次读取的页并不是所有数据都满足要求,所以这种方式被称为<code>随机IO</code>.那么对于B+ Tree而言,也需要从根节点向下查询,这其中也涉及到随机IO,但定位到需要的叶子节点后,读取页时只需要根据链表来定位到下一个页,每次读取的页大概率都是符合要求的数据,这种方式被称为<code>顺序IO</code>.所以在范围查询中,B Tree需要更多的IO操作,这样就需要耗费更多的时间.如果对随机IO和顺序IO不是很理解,文末有个参考资料可以去看一下.</p>
+<p>实际上数据最终都是存储到磁盘上的,对于Mysql来说,以页为最小单位来读取数据,在上面的图中,我们可以理解成每一个大的长方形框是一个页,而每个页里面存放了很多节点,对于B Tree来说,每个页的节点都存放整行数据,对于B+ Tree来说,非叶子页的节点只存放id,也被称为索引页，而叶子节点存放整行数据.对于页的读取,就涉及到IO操作,要知道IO读取数据的速度比从内存读取数据要慢得多,通常读取页的时间在10ms左右.</p>
+<p>以范围查询为例,我们从IO的角度来比较一下B Tree和B+ Tree的区别.对于B Tree而言,读取根节点需要一次IO操作,加载出页之后,当前页的数据可能只有部分符合要求,然后根据页的指针再进行IO操作,找到另外的页,整个过程需要更多的IO操作,并且因为每次读取的页并不是所有数据都满足要求,所以这种方式被称为随机IO.那么对于B+ Tree而言,也需要从根节点向下查询,这其中也涉及到随机IO,但定位到需要的叶子节点后,读取页时只需要根据链表来定位到下一个页,每次读取的页大概率都是符合要求的数据,这种方式被称为顺序IO.所以在范围查询中,B Tree需要更多的IO操作,这样就需要耗费更多的时间.如果对随机IO和顺序IO不是很理解,文末有个参考资料可以去看一下.</p>
 <p>所以整体上来看,B+ Tree是更好的选择.</p>
 <h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
 <li><a target="_blank" rel="noopener" href="https://www.baeldung.com/cs/b-trees-vs-btrees">https://www.baeldung.com/cs/b-trees-vs-btrees</a> (b树和b+树的区别)</li>
 <li><a target="_blank" rel="noopener" href="https://www.sobyte.net/post/2021-12/whys-the-design-mysql-b-plus-tree/">https://www.sobyte.net/post/2021-12/whys-the-design-mysql-b-plus-tree/</a> (为什么mysql使用b+树)</li>
 <li><a target="_blank" rel="noopener" href="https://flashdba.com/2013/04/15/understanding-io-random-vs-sequential/">https://flashdba.com/2013/04/15/understanding-io-random-vs-sequential/</a> (顺序IO和随机IO的区别)</li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -330,7 +331,7 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/05/17/%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/">
+                      <a href="/2023/05/20/%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/">
                         <span class="hidden-mobile">五种IO模型</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>

@@ -15,7 +15,7 @@
   
   <meta name="theme-color" content="#2f4154">
   <meta name="description" content="">
-  <meta name="author" content="DreamLin">
+  <meta name="author" content="君霖">
   <meta name="keywords" content="">
   
   <title>怎么保证Kafka的消息不丢失 - DreamLin&#39;s blog</title>
@@ -186,7 +186,7 @@
     
     <span class="post-meta mr-2">
       <i class="iconfont icon-chart"></i>
-      1.9k 字
+      1.5k 字
     </span>
   
 
@@ -196,7 +196,7 @@
       <i class="iconfont icon-clock-fill"></i>
       
       
-      19
+      15
        分钟
     </span>
   
@@ -238,39 +238,28 @@
             
             <div class="markdown-body">
               <hr>
-<h1 id="怎么保证Kafka的消息不丢失"><a href="#怎么保证Kafka的消息不丢失" class="headerlink" title="怎么保证Kafka的消息不丢失"></a>怎么保证Kafka的消息不丢失</h1><p>这篇文章来聊一聊怎么保证Kafka的消息不丢失.首先,我们可以反向思考一下:Kafka什么情况下消息会丢失.本文将从<code>broker</code>和<code>生产者</code>还有<code>消费者</code>三个端来讨论一下什么情况下消息会丢失,再通过给出解决方案来处理这些丢失的情况.</p>
-<h2 id="broker端"><a href="#broker端" class="headerlink" title="broker端"></a>broker端</h2><h3 id="丢失消息的情况"><a href="#丢失消息的情况" class="headerlink" title="丢失消息的情况"></a>丢失消息的情况</h3><p>首先最容易想到的是broker可能丢失消息.当消息到达broker时,消息可能因为以下几种情况丢失:</p>
-<ul>
-<li><p>消息被broker接收到了,但是没有刷到磁盘中,此时断电了,消息丢失了.</p>
-</li>
-<li><p>假如broker A是某个分区的首领,broker B和broker C对这个分区进行复制,因为复制会有延时,如果在复制过程中,B和C没有取得A的所有消息,此时A因为故障宕机了,并且宕机时间非常长,此时B或C可能会成为该分区的首领,但是因为没有复制到A所有的数据,那么在B和C的角度上看,因为复制延时而没有获取到的数据就丢失了.</p>
-</li>
+<h1 id="怎么保证Kafka的消息不丢失"><a href="#怎么保证Kafka的消息不丢失" class="headerlink" title="怎么保证Kafka的消息不丢失"></a>怎么保证Kafka的消息不丢失</h1><h2 id="怎么保证Kafka不丢失消息"><a href="#怎么保证Kafka不丢失消息" class="headerlink" title="怎么保证Kafka不丢失消息"></a>怎么保证Kafka不丢失消息</h2><p>Kafka保证不丢失消息需要生产者,Broker及消费者之间的协作,任何一个地方没有可靠性的保证,消息就有可能丢失.因此需要在整个链路上进行全盘考虑,使用具体的配置来达到目的</p>
+<h3 id="Broker端配置"><a href="#Broker端配置" class="headerlink" title="Broker端配置"></a>Broker端配置</h3><ul>
+<li>设置合理的复制因子.Broker可以配置参数replication.factor=N(主题级别,也可以配置Broker级别),配置尽可能大的复制因子意味着分区将会有多个副本,如果副本足够多,那么当一个分区不可用的时候,其它分区就可以接替分区的领导,提高可靠性.</li>
+<li>禁用不完全的领导选举.Broker可以配置参数unclean.leader.election.enable=false(Broker级别)来禁用不完全的领导选举,这意味着没有完全进行同步的副本不可以选举成为分区的领导,这样不会造成消息的丢失.另外,如果不进行禁用,那么一个处于同步的分区领导A下线之后,另外一个非同步的分区B成为了领导,那么当A上线时,将强制删除之前收到的消息(B并没有这些消息),改为对分区B进行复制,这样造成了消息的丢失.</li>
+<li>设置合理的最小同步副本个数.Broker可以配置参数min.insync.replicas=N(主题级别和Broker级别)来限制最小同步副本的个数.在Kafka中,当消息被写入到所有同步的副本中,才会被认为是已提交的,如果此时的同步副本只有一个,且配置min.insync.replicas=all,那么只要1个同步副本接收到消息,就认为消息时已提交的.为了保证消息写入到多个同步副本中,我们需要设置一个数量,比如min.insync.replicas=N,当生产者写入消息时,如果此时分区没有N个同步的副本,那么此时消息将不会被写入,生产者将接收到NotEnoughReplicasException. </li>
+<li>设置合理的心跳超时时间或复制间隔时间. 一个副本被认为不处于同步的情况通常有两种,一种情况是它未能在一定时间内向Zookeeper发送心跳,另外一种情况是在一定时间内未能复制分区领导的消息(或者是在一定时间内未能复制最新的消息).通过配置zookeeper.session.timeout.ms=N,我们可以设置一个合理的心跳超时时间,来减少网络波动或者垃圾回收带来的影响,使得副本变成不同步副本.通过配置replica.lag.time.max.ms,我们可以设置一个合理的复制间隔时间,来使得副本不那么容易变成不同步副本.</li>
+<li>设置合理的持久化消息大小阈值或者持久化时间间隔.Kafka认为消息是提交的并不需要消息被真正写入到磁盘,因为Kafka认为它的机制已经足够可靠,即使消息没有刷到磁盘中.但是为了进一步提高可靠性,可以通过配置flush.messages,设置一个合理的刷新到磁盘的消息大小数,来保证消息及时刷新到磁盘中.也可以通过配置flush.ms,设置一个合理的刷新到磁盘的时间间隔,保证消息及时刷新到磁盘. </li>
 </ul>
-<p>这两种情况看起来还是比较普遍的.</p>
-<h3 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h3><p>针对第一种情况,我们可以让broker将消息刷新到磁盘时,才认为是消息接收成功.如果没有刷新到磁盘,就告诉生产者消息并没有接收成功,需要进行重试,直到消息最终能刷新到磁盘.</p>
-<p>针对第二种情况,我们首先要让有复制延时的副本无法成为首领,这种副本在术语上被称为<code>unclean replica</code>,反之没有复制延时的副本叫做<code>in sync replica</code>,也被简称为<code>ISR</code>,当然这里有不严谨的地方,复制通常都是有一定延时的,因为复制消息本身就需要时间,Kafka提供了一些标准来判断是否一个副本是ISR,比如<b>在10s内是否向分区首领复制过消息</b>,比如<b>在5s内是否向zookeeper发送过心跳</b>,如果可以满足这些标准,我们就认为是没有延时的.Kafka提供了broker的配置参数<code>unclean.leader.election.enable=false</code>来实现让不是ISR的副本无法成为首领,尽管其他ISR还是有可能没有复制到一部分消息,然后因为首领宕机后,某个ISR选举成新的首领,但是这种丢失消息的情况概率很低,所以我们认为它属于不丢失消息的情况(ps:如果要硬说,那确实会丢,但这是没有办法的办法,因为主从复制本来就很有可能丢失消息,除非我们再加入其它机制去实现).</p>
-<p>另外,为了消息有更多的副本,Kafka提供了配置参数<code>min.insync.replicas=N</code>来指定当至少集群有N个ISR(包括首领在内)时才能为生产者提供写服务,但此时可以给消费者提供读服务,可以理解成当ISR小于N时,分区是只读的.一些副本可能因为发生网络分区或宕机而没有进行正常的复制,进而变成<code>不同步的副本</code>,这个机制使得我们可以等待这些副本在重启或网络通畅之后去复制落后于首领的那些消息,进而重新成为ISR,然后整个集群满足N个ISR后重新提供写服务,因此这个机制可以保证消息有多个副本,进而降低消息丢失的可能性.</p>
-<h2 id="生产者端"><a href="#生产者端" class="headerlink" title="生产者端"></a>生产者端</h2><h3 id="丢失消息的情况-1"><a href="#丢失消息的情况-1" class="headerlink" title="丢失消息的情况"></a>丢失消息的情况</h3><p>生产者作为生产消息的一方,看起来好像不太可能丢失消息,但还是存在丢失消息的可能性:</p>
-<ul>
-<li>消息发送时发生错误.比如当消息发送到broker时,此时正在进行分区的领导选举,broker返回<code>leader is not available</code>错误,但是由于没有去处理这个错误,误以为消息发送成功,导致消息丢失了.</li>
-<li>消息发送后,没有得到broker的正确响应就认为消息已经发送成功,实际上broker并没有接收到,或者并没有刷新到磁盘中.</li>
+<h3 id="生产者端配置"><a href="#生产者端配置" class="headerlink" title="生产者端配置"></a>生产者端配置</h3><ul>
+<li>将ack设置为一个合理的值.ack的值代表有多少副本接收到消息,生产者才会收到正确的响应,ack等于0意味着消息被传到网络上,生产者就认为是成功.如果ack=1,就代表一个broker接到消息就认为是成功.将ack=all与min.insync.replicas=N参数结合,可以保证有N个副本收到了消息,此时Broker向生产者返回ack.</li>
+<li>配置合理的重试参数进行重试.对于Broker返回的可重试的错误,生产者应该进行重试来保证消息不丢失.可以使用默认的最大重试次数(一直重试)配合最大的发送超时时间参数delivery.timout.ms,来保证在超时时间内消息不断进行重试.</li>
+<li>对于不可重试错误,开发者需要修改配置解决.</li>
 </ul>
-<h3 id="解决办法-1"><a href="#解决办法-1" class="headerlink" title="解决办法"></a>解决办法</h3><p>其实上面的两个问题最终的现象就是没有得到broker的正确响应,所以我们可以统一解决.在生产者端提供了一个ack参数,可以确保消息被多少个broker处理.ack有以下几种情况:</p>
-<ul>
-<li>ack=0 消息只要从网络上发出去,就认为成功.</li>
-<li>ack=1 分区首领接收到消息</li>
-<li>ack=N(N&gt;0) 分区首领接收到消息后,至少包括首领在内的N个副本获取到消息(其余副本通过复制消息得到)</li>
-<li>ack=all all等于broker设置的min.insync.replicas的值,比如min.insync.replicas=3,那么ack=3,也就是上面的N等于3的情况.</li>
+<h3 id="消费者端配置"><a href="#消费者端配置" class="headerlink" title="消费者端配置"></a>消费者端配置</h3><ul>
+<li>最好使用auto.offset.reset=earliest.当消费者消费一个分区时,如果没能获取到上一次同一个消费者组消费该分区的偏移量,那么将采用设置的自动偏移重置参数所配置的策略来重新获取消息,使用earliest虽然可能导致消息被重复消费,但是可以最大限度的保证消息不丢失</li>
+<li>最好使用手动提交,自动提交有可能提交一些程序还没有处理过的偏移量,使用手动提交会更灵活.</li>
+<li>成功处理完消息之后再提交偏移量.</li>
+<li>考虑对分区重平衡进行恰当的处理.分区重平衡时,应该要保证分区在收回之前成功提交偏移量</li>
+<li>在处理消息失败时进行恰当的处理.当我们在处理消息时发生错误,第一种方式可以使用pause方法暂停在轮询中获取数据,然后重试去处理发生错误的消息.第二种方式可以将发生错误的消息写入到另外一个主题中,然后用另外一个消费者组去单独处理.</li>
 </ul>
-<p>首先,我们应该至少保证ack等于1,这样至少分区的首领可以接收到消息.我们也可以把ack设为更大的数,确保消息被复制多份再返回成功,尽管依赖broker之间的复制以及broker端的参数也能保证消息有多个副本,但是通过ack我们可以强制要求<b>有N个副本才能返回成功</b>,进而在生产者端就能知道消息已经复制多份,但这样做的代价是等待这个复制过程是需要时间的,所以性能并不高.如果设置了ack之后,broker无法正确的响应,我们就需要不断的重试.当然在实际业务中,我们要想办法设计更加合理的重试机制.</p>
-<h2 id="消费者端"><a href="#消费者端" class="headerlink" title="消费者端"></a>消费者端</h2><h3 id="丢失消息的情况-2"><a href="#丢失消息的情况-2" class="headerlink" title="丢失消息的情况"></a>丢失消息的情况</h3><p>消费者可能丢失消息的情况跟broker并没有任何关系,主要原因是消费者自己的问题,比如:</p>
-<ul>
-<li>消费者拉取消息后,处理消息失败,但提交了偏移量,这视为丢失消息的一种情况.比如在处理消息时,把消息解析后,插入到数据库中发生异常,但提交了最后一个偏移量,下次轮询无法再获取到那些处理失败的消息.</li>
-</ul>
-<h3 id="解决办法-2"><a href="#解决办法-2" class="headerlink" title="解决办法"></a>解决办法</h3><p>这种情况解决的方式其实比较简单,主要就是要确保拉取到的消息要全部处理成功再提交偏移量,比如我们可以针对处理失败的消息进行重试,如果考虑到性能,可以把失败的记录存储起来,先提交偏移量,后面再单独处理这些失败的消息,比如把失败的消息放入一个<code>死信队列</code>,然后通过另外一个专门的消费者不断的重试去消费这些特殊的消息.</p>
-<h2 id="消息不丢失是多端的责任"><a href="#消息不丢失是多端的责任" class="headerlink" title="消息不丢失是多端的责任"></a>消息不丢失是多端的责任</h2><p>从上面的介绍上看,我们可以看出,消息可能在生产者,broker,消费者这三者中发生丢失的可能,所以丢失是多端的责任,当消息发生丢失,我们可以顺着生产者到broker,再到消费者这条链路去找到消息丢失的原因.</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li>Kafka权威指南第二版第七章</li>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li>Kafka权威指南第二版第七章 Reliable Data Delivery</li>
 </ul>
 
             </div>
@@ -278,6 +267,20 @@
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/kafka/">kafka</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/kafka/">kafka</a>
+                    
+                  </div>
                 
               </div>
               
