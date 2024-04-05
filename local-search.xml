@@ -4,31 +4,6 @@
   
   
   <entry>
-    <title>页分裂和页合并</title>
-    <link href="/2024/04/12/%E9%A1%B5%E5%88%86%E8%A3%82%E5%92%8C%E9%A1%B5%E5%90%88%E5%B9%B6/"/>
-    <url>/2024/04/12/%E9%A1%B5%E5%88%86%E8%A3%82%E5%92%8C%E9%A1%B5%E5%90%88%E5%B9%B6/</url>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="mysql表数据组成"><a href="#mysql表数据组成" class="headerlink" title="mysql表数据组成"></a>mysql表数据组成</h2><p>一个表通常由一个.ibd文件所表示,一个文件又由N个段组成,每个段关联一个索引.一个段又由多个区组成,而每个区又由多个页组成,默认情况下,区的大小为1MB,页的大小为16KB,一个区中最多可以存放64个页.一个页至少需要存放两行数据,因此页中的行数据的长度最长为8KB,而每行数据有多大,由表的模式所决定,通常表的模式又由一个.frm文件所表示.一张图片可以更形象的表达一些概念:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933413169-ac3a5f8e-61bd-4ad1-8836-50692a4d038c.png" alt="img"></p><h2 id="页的组成"><a href="#页的组成" class="headerlink" title="页的组成"></a>页的组成</h2><p>Mysql中操作数据的最小单位不是行,而是页,这意味着Mysql不会单独从磁盘上查询一行记录,而是至少查到一个页,然后从中获取行记录.在主键索引的叶子节点中,数据将按照主键大小按顺序存放在页中,页和页之间通过双向链表进行连接,这也就意味着在物理上相邻的两个页不一定是按顺序的.我们所讨论的页分裂和页合并中的”页”具体指的就是主键索引的叶子节点.</p><h2 id="页的内部"><a href="#页的内部" class="headerlink" title="页的内部"></a>页的内部</h2><p>一个具体的页的样子如下图,主键ID依次为1,2,3,4,通常页中有一个50%的阈值用于合并操作,也就是页大小的一半.</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899508328-48745c0e-41f7-4d12-b5e9-295099bc6137.png" alt="img"></p><p>数据将按顺序插入页中:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933887707-a0dabc90-ea98-4959-8ea9-f46f07f93418.png" alt="img"></p><p>如果数据无法存放在当前页,那么将存放在下一个页中</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933959403-8d86ad3c-0a3f-4beb-a79e-3078a2af470a.png" alt="img"></p><h2 id="页合并"><a href="#页合并" class="headerlink" title="页合并"></a>页合并</h2><p>如果页中的数据被删除,那么实际上这块的空间并不会被回收,而是标记为可重复利用.当一个页的数据被删除或者更新,空间小于所规定的阈值大小,那么Mysql会查找前一个页,和后一个页,判断是否可以将这个页合并到另外一个页,这样就可以节省下一个页的空间.以下是Page5和Page6的一个合并过程:</p><ol><li>Page5的一些数据被删除,并且空间降到了阈值之下</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899710734-d9bbd9e2-432b-4d95-b159-e83ed11cd5f8.png" alt="img"></p><ol><li>Page5的下一个页Page6的数据此时不到一半,并且这些数据可以放入Page5</li></ol><h2 id=""><a href="#" class="headerlink" title=""></a><img src="https://cdn.nlark.com/yuque/0/2023/png/22278782/1697899842787-6a83fef1-da67-496f-83e8-872a802812f2.png" alt="img"></h2><ol><li>进行页合并操作</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899897659-7c0c55a9-7555-42cd-8466-5ddf30c1257f.png" alt="img"></p><ol><li>Page6变成了空页,用于存放新的数据</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899974126-ded6a603-8052-41b6-8456-7d2a2e2c6196.png" alt="img"></p><h2 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a>页分裂</h2><p>如果一个页快满了,此时我们插入数据,但下一个页的空间也全部占满.这个时候Mysql将创建一个新页,然后将快满的这个页的部分数据迁移到新页中,这部分数据就是超出原来那个页阈值的那部分数据,之后再插入新的数据.以下是一个页分裂过程:</p><ol><li>往Page10插入数据,但此时该页已没有空间可以容纳</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900364335-2f8d0db7-59bf-4317-918a-044ff71faa06.png" alt="img"></p><ol><li>Page10的下一个页Page11也没有空间可以容纳,并且27这个数据是要插入到28之前的.</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900393905-7e7a8451-6c7b-4e95-908c-88096f272514.png" alt="img"></p><ol><li>此时创建一个新页Page12,将Page10的24-26号数据迁移到新页,并插入27</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900503279-f3d04b9c-015f-4389-b5ec-f6c8e3980684.png" alt="img"></p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900462918-31189d4e-2232-4e88-aba1-76af0cd091b2.png" alt="img"></p><ol><li>修改页之间的链接关系,Page10的下一个页此时是Page12而不是Page11,因此页并不是物理连续的,而是逻辑连续的.两个相邻的页可能存放在不同的区中.</li></ol><h2 id="索引设计带来的影响"><a href="#索引设计带来的影响" class="headerlink" title="索引设计带来的影响"></a>索引设计带来的影响</h2><p>假如我们有个主键,如果我们使用自增id,那么产生的页分裂和页合并会比较少,但是如果我们使用无规则的id,那么大概率会使得整个数据分布得很稀疏,进而给性能带来以下影响:</p><ul><li>使用了更多的页,浪费更多的磁盘空间</li><li>数据分布在很多稀疏的页中,加载页也需要CPU时间,那么可能导致获取数据时间变长</li><li>页合并和页分裂进行过程会带来性能影响</li></ul><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://www.percona.com/blog/innodb-page-merging-and-page-splitting/">https://www.percona.com/blog/innodb-page-merging-and-page-splitting/</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>mysql</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>mysql</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
     <title>CDN原理</title>
     <link href="/2024/04/05/CDN%E5%8E%9F%E7%90%86/"/>
     <url>/2024/04/05/CDN%E5%8E%9F%E7%90%86/</url>
@@ -36,81 +11,6 @@
     <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="为什么要有CDN"><a href="#为什么要有CDN" class="headerlink" title="为什么要有CDN"></a>为什么要有CDN</h2><p>如果没有CDN,那么视频将直接存储在数据中心中.这将带来三个问题:</p><ol><li>数据中心如果离用户过远,那么中间必然会经过很多链路,如果某个链路的传输速率小于视频消费速率,那么整体的视频消费速率就会下降.</li><li>数据中心不得不重复发送一些热点视频,这样浪费带宽,并且这些视频的发送需要向ISP进行付费.</li><li>数据中心可能会出现单点故障问题.</li></ol><h2 id="CDN部署策略"><a href="#CDN部署策略" class="headerlink" title="CDN部署策略"></a>CDN部署策略</h2><ol><li>Enter Deep.部署CDN集群到ISP的访问网络,目的是更加靠近用户,因此可以减少链路和路由器的数量,最终降低用户感知的延迟,提升吞吐量.这种部署方式由于采用的是高度分布式设计,因此维护和管理集群的任务比较有挑战性</li><li>Bring Home.将CDN放置在互联网交换点中(IXP),这种部署方式对于用户的延迟会比较高,吞吐量也会降低,但是维护和管理的开销也会比较低</li></ol><h2 id="CDN数据拉取方式"><a href="#CDN数据拉取方式" class="headerlink" title="CDN数据拉取方式"></a>CDN数据拉取方式</h2><p>每个CDN存储的数据基本都不一样,因为有些数据对于其它地区来说不是热门数据,CDN使用的是简单的拉取策略,如果一个客户从CDN中没有获取到数据,那么这个CDN将会从数据中心或者集群中的其他CDN中获取,并且将数据缓存到本地,如果数据满了,将会删除掉最不经常请求的数据.</p><h2 id="CDN原理"><a href="#CDN原理" class="headerlink" title="CDN原理"></a>CDN原理</h2><p>通常CDN利用DNS来拦截和重定向用户请求,一个典型的流程如下:</p><ol><li>客户浏览某个网站,比如<a href="http://www.douyin.com/">www.douyin.com</a></li><li>客户请求某个视频,比如视频地址是<a href="http://www.vedio.douyin.com/7A8W,%E6%AD%A4%E6%97%B6%E7%94%A8%E6%88%B7%E4%B8%BB%E6%9C%BA%E5%90%91%E5%85%B6%E6%9C%AC%E5%9C%B0DNS%E8%8E%B7%E5%8F%96%E5%9F%9F%E5%90%8D%E5%AF%B9%E5%BA%94%E7%9A%84IP%E5%9C%B0%E5%9D%80">www.vedio.douyin.com/7A8W,此时用户主机向其本地DNS获取域名对应的IP地址</a></li><li>本地DNS服务器请求其域名对应的DNS权威服务器获取IP地址,DNS发现其域名中有”vedio”字符串,此时并不返回一个IP地址,而是返回CDN服务器的域名,例如A1235.cdn.com</li><li>接下去本地DNS将向A1235.cdn.com对应的DNS权威服务器获取对应的IP.此时该DNS服务器通常会查询地理位置数据库来获取离本地DNS服务器最近的CDN服务器的IP地址,然后将IP地址返回给本地DNS服务器</li><li>本地DNS服务器将CDN的IP地址返回给用户主机</li><li>用户主机收到IP地址,向对应CDN请求资源</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697721310416-42a9ddb4-b76a-40eb-a1a4-8b840d725d47.png" alt="img"></p><h2 id="CDN集群选择策略"><a href="#CDN集群选择策略" class="headerlink" title="CDN集群选择策略"></a>CDN集群选择策略</h2><p>DNS是如何选择集群中的某个CDN的?</p><h3 id="地理就近策略"><a href="#地理就近策略" class="headerlink" title="地理就近策略"></a>地理就近策略</h3><p>通常权威DNS服务器从本地DNS服务器中获取到其IP地址,通过使用商业地理位置数据库获取到离该本地DNS服务器最近的CDN服务器.这种方式对于大部分的用户来说是合理的,但是也存在缺陷.比如:</p><ol><li>地理最靠近的CDN服务器并不是网络路径最短的服务器,</li><li>有可能用户的本地DNS服务器离用户很遥远.</li><li>总是返回同样的CDN服务器给用户,没有考虑网络路径上延迟和可用带宽的变化.</li></ol><p>为了解决这个缺陷.可以采用探测技术,来主动感知CDN到客户之间的延迟,从而为CDN的选择提供数据参考.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><strong>计算机网络自顶向下方法 2.6.3 Content Distribution Networks</strong></p>]]></content>
     
     
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>HTTP的演变.md</title>
-    <link href="/2024/04/05/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/"/>
-    <url>/2024/04/05/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/</url>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="万维网的四个部分"><a href="#万维网的四个部分" class="headerlink" title="万维网的四个部分"></a>万维网的四个部分</h2><ul><li>一个文件格式去代表超文本文档——HTML</li><li>一个简单的协议去交换这些文档——HTTP</li><li>一个客户端去展示和编辑这些文档——浏览器</li><li>一个服务器用于访问这些文档</li></ul><h2 id="HTTP0-9——一行协议"><a href="#HTTP0-9——一行协议" class="headerlink" title="HTTP0.9——一行协议"></a>HTTP0.9——一行协议</h2><p>HTTP0.9极其的简单,请求只包含单行,并且只可能使用一个GET方法,后面跟随路径和资源名,一旦连接到服务器之后,协议,服务器,端口号是不需要的,因此请求中没有URL</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plain">GET &#x2F;mypage.html<br></code></pre></td></tr></table></figure><p>响应也是极其简单的,只包含响应内容</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs http">&lt;html&gt;<br>  A very simple HTML page<br>&lt;/html&gt;<br></code></pre></td></tr></table></figure><p>由于HTTP0.9没有HTTP头部,所以只能传输HTML文件.由于没有状态码和错误码,如果出现了任何问题,那么一个特定的HTML文件将生成,来展示问题的描述信息.</p><h2 id="HTTP1-0——构建扩展性"><a href="#HTTP1-0——构建扩展性" class="headerlink" title="HTTP1.0——构建扩展性"></a>HTTP1.0——构建扩展性</h2><ul><li>每个请求添加了版本信息,如GET 资源 HTTP/1.0</li><li>响应的开头包含了响应码行,这允许浏览器去识别请求成功或者失败,并由此适配出合适的行为,比如在成功的时候更新资源,在失败的时候使用本地缓存.</li><li>HTTP头部的概念引入到请求和响应.元数据可以被传输,因此协议变得极其灵活和可扩展.</li><li>由于有了Content-Type头部,除了HTML之外的其他类型资源也可以传输.</li></ul><p>HTTP的请求和响应如下:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/mypage.html</span> HTTP/1.0<br><span class="hljs-attribute">User-Agent</span>: NCSA_Mosaic/2.0 (Windows 3.1)<br><br>200 OK<br><span class="hljs-attribute">Date</span>: Tue, 15 Nov 1994 08:12:31 GMT<br><span class="hljs-attribute">Server</span>: CERN/3.0 libwww/2.17<br><span class="hljs-attribute">Content-Type</span>: text/html<br>&lt;HTML&gt;<br>A page with an image<br>  &lt;IMG SRC=&quot;/myimage.gif&quot;&gt;<br>&lt;/HTML&gt;<br></code></pre></td></tr></table></figure><p>随后发生的请求和响应:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/myimage.gif</span> HTTP/1.0<br><span class="hljs-attribute">User-Agent</span>: NCSA_Mosaic/2.0 (Windows 3.1)<br><br>200 OK<br><span class="hljs-attribute">Date</span>: Tue, 15 Nov 1994 08:12:32 GMT<br><span class="hljs-attribute">Server</span>: CERN/3.0 libwww/2.17<br><span class="hljs-attribute">Content-Type</span>: text/gif<br>(image content)<br></code></pre></td></tr></table></figure><h2 id="HTTP1-1——标准协议"><a href="#HTTP1-1——标准协议" class="headerlink" title="HTTP1.1——标准协议"></a>HTTP1.1——标准协议</h2><p>HTTP1.1提供了许多改进.</p><ul><li>一个连接可以被复用,用于节省时间.在请求资源时,不需要再建立多个连接</li><li>管道化.允许在第一个请求还没有完成传输时发送第二个请求,这个降低了通讯的延迟</li><li>支持大块的响应</li><li>引入了额外的缓存控制机制</li><li>客户端和服务器支持内容协商,包括语言,编码,类型的协商.</li><li>新增了Host头部,使得一个服务器(一个IP)可以拥有不同的域名.</li></ul><p>一个典型的HTTP1.1请求示例,所有的请求都通过一个TCP连接:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/en-US/docs/Glossary/Simple_header</span> HTTP/1.1<br><span class="hljs-attribute">Host</span>: developer.mozilla.org<br><span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:50.0) Gecko/20100101 Firefox/50.0<br><span class="hljs-attribute">Accept</span>: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8<br><span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5<br><span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate, br<br><span class="hljs-attribute">Referer</span>: https://developer.mozilla.org/en-US/docs/Glossary/Simple_header<br><br>200 OK<br><span class="hljs-attribute">Connection</span>: Keep-Alive<br><span class="hljs-attribute">Content-Encoding</span>: gzip<br><span class="hljs-attribute">Content-Type</span>: text/html; charset=utf-8<br><span class="hljs-attribute">Date</span>: Wed, 20 Jul 2016 10:55:30 GMT<br><span class="hljs-attribute">Etag</span>: &quot;547fa7e369ef56031dd3bff2ace9fc0832eb251a&quot;<br><span class="hljs-attribute">Keep-Alive</span>: timeout=5, max=1000<br><span class="hljs-attribute">Last-Modified</span>: Tue, 19 Jul 2016 00:59:33 GMT<br><span class="hljs-attribute">Server</span>: Apache<br><span class="hljs-attribute">Transfer-Encoding</span>: chunked<br><span class="hljs-attribute">Vary</span>: Cookie, Accept-Encoding<br><br>(content)<br><br><span class="hljs-keyword">GET</span> <span class="hljs-string">/static/img/header-background.png</span> HTTP/1.1<br><span class="hljs-attribute">Host</span>: developer.mozilla.org<br><span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:50.0) Gecko/20100101 Firefox/50.0<br><span class="hljs-attribute">Accept</span>: */*<br><span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5<br><span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate, br<br><span class="hljs-attribute">Referer</span>: https://developer.mozilla.org/en-US/docs/Glossary/Simple_header<br><br>200 OK<br><span class="hljs-attribute">Age</span>: 9578461<br><span class="hljs-attribute">Cache-Control</span>: public, max-age=315360000<br><span class="hljs-attribute">Connection</span>: keep-alive<br><span class="hljs-attribute">Content-Length</span>: 3077<br><span class="hljs-attribute">Content-Type</span>: image/png<br><span class="hljs-attribute">Date</span>: Thu, 31 Mar 2016 13:34:46 GMT<br><span class="hljs-attribute">Last-Modified</span>: Wed, 21 Oct 2015 18:27:50 GMT<br><span class="hljs-attribute">Server</span>: Apache<br><br>(image content of 3077 bytes)<br></code></pre></td></tr></table></figure><h2 id="HTTPS"><a href="#HTTPS" class="headerlink" title="HTTPS"></a>HTTPS</h2><p>1994年网景公司在TCP/IP栈上的顶部创造了一个额外的加密层——SSL.SSL1.0没有公开,而SSL2.0和它的后继者SSL3.0用于电子商务网站的建立.HTTPS加密信息,保证它们在客户和服务器之间的真实性,SSL最终标准化并演变成了TLS.随后,由于互联网的普及性,HTTPS不再只用于电子商务场景中,比如用于私人信息的保护,比如电话簿,用户位置,邮箱等.</p><h2 id="HTTP2-0——用于提升性能"><a href="#HTTP2-0——用于提升性能" class="headerlink" title="HTTP2.0——用于提升性能"></a>HTTP2.0——用于提升性能</h2><p>HTTP2.0和HTTP1.1的不同之处:</p><ul><li>HTTP2.0是一个二进制协议而不是文本协议.它不可以被手动读取和创造.它允许优化提升技术的实现</li><li>HTTP2.0是一个多路复用协议.并行请求可以在同一个连接上被创建.</li><li>HTTP2.0进行了头部压缩.由于一些请求经常发送一些相同的头部信息,这个特性减少了传输重复数据的开销</li><li>HTTP2.0允许服务器推送数据到客户端客户端缓存.</li></ul><h2 id="HTTP3-0——在QUIC上的HTTP"><a href="#HTTP3-0——在QUIC上的HTTP" class="headerlink" title="HTTP3.0——在QUIC上的HTTP"></a>HTTP3.0——在QUIC上的HTTP</h2><p>下一个主要的HTTP版本,HTTP3与早期的HTTP有相同的语义,但是使用QUIC代替TCP来做运输层传输.QUIC使得HTTP连接拥有更低的延迟,和HTTP2一样,它是一个多路复用协议,但是HTTP2运行在单个TCP连接上,因此包丢失检测和重传处理可能阻塞连接上的所有流.而QUIC运行多个流在UDP之上,并且为每个流实现了单独的包丢失检测和重传,一旦错误发生,只有发生错误的流的数据包会发生阻塞.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Evolution_of_HTTP">https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Evolution_of_HTTP</a></p>]]></content>
-    
-    
-    <categories>
-      
-      <category>计算机网络</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>计算机网络</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>TCP拥塞控制</title>
-    <link href="/2024/04/05/tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/"/>
-    <url>/2024/04/05/tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/</url>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="为什么会发生拥塞"><a href="#为什么会发生拥塞" class="headerlink" title="为什么会发生拥塞"></a>为什么会发生拥塞</h2><ul><li>不同连接会共享网络上的路由器,路由器的传输能力有限,导致传输的数据包不得不在链路中排队.</li><li>一条链路上有多个路由器,由于某个连接抢占了中间的某个路由器的容量,可能会导致其它连接的数据包在中途某个路由器中丢失,进而引起重传,引起拥塞.</li><li>数据包并没有被丢弃,主机在一定时间内没有收到ACK,进行数据包的重传,导致链路变得拥塞.这种情况称为过早超时.</li></ul><h2 id="如何感知拥塞"><a href="#如何感知拥塞" class="headerlink" title="如何感知拥塞"></a>如何感知拥塞</h2><ol><li>链路拥塞:丢失事件(超时或者接收到三个重复的ACK)暗示拥塞,发送者应该限制发送速率.</li><li>链路不拥塞:收到ACK暗示着数据包正确到达目的,发送者应该加快发送速率.</li></ol><h2 id="TCP如何限制发送速率"><a href="#TCP如何限制发送速率" class="headerlink" title="TCP如何限制发送速率"></a>TCP如何限制发送速率</h2><p>使用拥塞窗口cwnd,发送速率限制的公式如下:LastByteSent – LastByteAcked 应该小于等于 min{cwnd, rwnd}</p><h3 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h3><p>1.慢开始.一开始发送1个MSS,如果正确收到ACK,则进行加倍,发送2个MSS,4个MSS,以此类推.当发生超时事件时,设置一个叫ssthresh的值,等于cwnd的一半,并且重新一轮新的慢开始阶段,如果到达ssthresh,则结束慢开始阶段,进入拥塞避免阶段.另外,如果不是超时,而是收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口先减半,然后加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p><p>2.拥塞避免.正确收到一个ACK后,每次只增加一个MSS.如果发生超时事件,让ssthresh的值等于cwnd的一半,重新进入慢开始阶段.另外,如果收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p><p>如图所示:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1693033291970-b812fa61-9979-4824-91fa-5fd3cecebd98.png" alt="img"></p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul><li>计算机网络自顶向下方法3.6.1  The Causes and the Costs of Congestion  3.7.1  Classic TCP Congestion Control  </li></ul>]]></content>
-    
-    
-    <categories>
-      
-      <category>计算机网络</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>计算机网络</tag>
-      
-    </tags>
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>Java equals和hashCode方法规范</title>
-    <link href="/2024/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/"/>
-    <url>/2024/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/</url>
-    
-    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="什么时候要重写equals方法"><a href="#什么时候要重写equals方法" class="headerlink" title="什么时候要重写equals方法"></a>什么时候要重写equals方法</h2><p>只当真正需要为对象提供”逻辑相等性”时才重写equals方法</p><h2 id="equals方法需要遵守的通用约定"><a href="#equals方法需要遵守的通用约定" class="headerlink" title="equals方法需要遵守的通用约定"></a>equals方法需要遵守的通用约定</h2><ol><li>反射性.非空的x引用调用x.equals(x)返回true</li><li>对称性.非空的x引用调用x.equals(y)返回true时,y.equals(x)也应该返回true</li><li>传递性.非空的x,y,z引用调用x.equals(y)返回true,调用y.equals(z)返回true,那么x.equals(z)也应该返回true</li><li>一致性.非空的x,y引用调用x.equals(y)返回true,那么调用多次也应该返回true</li><li>非空的x,调用x.equals(null)应该返回false</li></ol><h2 id="如何编写一个正确的equals方法"><a href="#如何编写一个正确的equals方法" class="headerlink" title="如何编写一个正确的equals方法"></a>如何编写一个正确的equals方法</h2><ol><li><p>使用==判断两个对象是否是同一个引用,如果是,返回true,这一步是一种优化</p></li><li><p>使用 instanceof 判断传入的对象是否是正确的类型,如果不是,返回false</p></li><li><p>对传入的对象进行转型,由于我们第2步进行了instanceof判断,这次转型是安全的</p></li><li><p>比较满足”逻辑性相等”所需要的字段,如果这些字段都相等,那么返回true.</p></li><li><ol><li>对于非float和double类型的基本类型变量,使用==进行比较</li><li>对于对象引用,使用对应的equals方法进行比较,一些对象引用可能为空,那么应该使用Objects.equals()方法进行比较</li><li>对于float字段,使用静态的 Float.compare(float, float)进行比较.</li><li>对于double字段, 使用静态的Double.compare(double, double)进行比较.</li><li>对于数组元素,根据元素的类型按照上面的规则进行比较,如果每个元素都需要比较,那么使用Arrays.equals()方法进行比较</li></ol></li></ol><h3 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h3><ol><li>如果某个字段更可能不同,那么应该提前判断,这样可能可以提前返回false.</li><li>如果某个字段判断的代价更低,也应该提前判断,这样可能可以提前返回false.</li><li>如果有某个由其他字段计算出来的字段(这个字段仅仅作为性能优化判断使用,这个字段不参与equals逻辑性相等比较),那么先判断这个字段是否相等,这样可能可以提前返回false.比如一个多边形有边和长,如果面积不相等,那么就不需要再判断边和长了</li></ol><h2 id="重写equals需要重写hashCode方法"><a href="#重写equals需要重写hashCode方法" class="headerlink" title="重写equals需要重写hashCode方法"></a>重写equals需要重写hashCode方法</h2><p>根据hashCode约定,重写equals方法必须重写hashCode方法如果</p><h3 id="HashCode方法规范"><a href="#HashCode方法规范" class="headerlink" title="HashCode方法规范"></a>HashCode方法规范</h3><ol><li>当一个应用的对象的hashCode方法被反复调用时,且对象没有进行任何修改,那么hashCode应该不变</li><li>如果x.equals(y)方法返回true,那么x和y的hashCode必须相等</li><li>如果x.equals(y)方法返回false,那么x和y的hashCode不一定要相等.但是最好使其不相等,这样可以使得在HashMap等数据结构中提升性能</li></ol><h2 id="为什么重写equals要重写hashCode"><a href="#为什么重写equals要重写hashCode" class="headerlink" title="为什么重写equals要重写hashCode"></a>为什么重写equals要重写hashCode</h2><p>如果equals方法相同,hashcode不同,那么使用类似于HashMap的集合类时,那么可能将原本相同的对象Hash到不同一个桶位置,这样再次检索两个”逻辑相等”的对象就检索不到.即使hash到同一个桶中,由于在HashMap中做了优化,如果两个元素的hash值不同,那么就认为是不相等的对象.</p><h2 id="如何写一个正确的HashCode方法"><a href="#如何写一个正确的HashCode方法" class="headerlink" title="如何写一个正确的HashCode方法"></a>如何写一个正确的HashCode方法</h2><h3 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h3><p>一个好的哈希函数趋向于让不相等的对象返回不同的hash code,并且尽可能使其在哈希表等集合框架类中保证其数据的分散性.</p><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol><li><p>为字段计算哈希值</p></li><li><ol><li>如果字段是基础类型,那么使用对应的包装类的hashCode方法来获取哈希值</li><li>如果字段是对象引用,如果字段为null,那么通常认为哈希值为0,如果该字段对应的对象的equals方法中又递归的判断了其它字段,那么就递归调用该对象的hashCode方法.</li><li>如果字段是一个数组,对数组的每个元素计算哈希值.如果不需要数组里的元素参与计算,那么最好返回一个不是0的常数.如果所有的元素需要参与计算,那么使用Arrays.hashCode方法</li></ol></li><li><p>第一个字段的哈希值为result,那么从第二个字段开始的哈希值称为c,那么result=result * 31 +  c,依次累加</p></li></ol><h3 id="技巧"><a href="#技巧" class="headerlink" title="技巧"></a>技巧</h3><p>通常来说,euqals方法哪些字段参与比较,hashCode方法就哪些字段去计算哈希值</p><h3 id="性能优化-1"><a href="#性能优化-1" class="headerlink" title="性能优化"></a>性能优化</h3><p>如果一个对象是不可变的,那么可以考虑将hash值缓存起来</p><h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>对equals方法和hashCode方法需要注意基本的规则,但大多数工具类都可以为我们生成这个两个方法,所以实际上对于如何写正确的equals方法和hashCode方法一般很少实践.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul><li>effective java item 10  Obey the general contract when overriding equalsObey the g eneral contract</li><li>effective java item 11 Always override hashCode when you override equals</li></ul>]]></content>
-    
-    
-    <categories>
-      
-      <category>java基础</category>
-      
-    </categories>
-    
-    
-    <tags>
-      
-      <tag>java基础</tag>
-      
-    </tags>
     
   </entry>
   
@@ -217,6 +117,31 @@
   
   
   <entry>
+    <title>HTTP的演变.md</title>
+    <link href="/2023/04/25/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/"/>
+    <url>/2023/04/25/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/</url>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="万维网的四个部分"><a href="#万维网的四个部分" class="headerlink" title="万维网的四个部分"></a>万维网的四个部分</h2><ul><li>一个文件格式去代表超文本文档——HTML</li><li>一个简单的协议去交换这些文档——HTTP</li><li>一个客户端去展示和编辑这些文档——浏览器</li><li>一个服务器用于访问这些文档</li></ul><h2 id="HTTP0-9——一行协议"><a href="#HTTP0-9——一行协议" class="headerlink" title="HTTP0.9——一行协议"></a>HTTP0.9——一行协议</h2><p>HTTP0.9极其的简单,请求只包含单行,并且只可能使用一个GET方法,后面跟随路径和资源名,一旦连接到服务器之后,协议,服务器,端口号是不需要的,因此请求中没有URL</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs plain">GET &#x2F;mypage.html<br></code></pre></td></tr></table></figure><p>响应也是极其简单的,只包含响应内容</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs http">&lt;html&gt;<br>  A very simple HTML page<br>&lt;/html&gt;<br></code></pre></td></tr></table></figure><p>由于HTTP0.9没有HTTP头部,所以只能传输HTML文件.由于没有状态码和错误码,如果出现了任何问题,那么一个特定的HTML文件将生成,来展示问题的描述信息.</p><h2 id="HTTP1-0——构建扩展性"><a href="#HTTP1-0——构建扩展性" class="headerlink" title="HTTP1.0——构建扩展性"></a>HTTP1.0——构建扩展性</h2><ul><li>每个请求添加了版本信息,如GET 资源 HTTP/1.0</li><li>响应的开头包含了响应码行,这允许浏览器去识别请求成功或者失败,并由此适配出合适的行为,比如在成功的时候更新资源,在失败的时候使用本地缓存.</li><li>HTTP头部的概念引入到请求和响应.元数据可以被传输,因此协议变得极其灵活和可扩展.</li><li>由于有了Content-Type头部,除了HTML之外的其他类型资源也可以传输.</li></ul><p>HTTP的请求和响应如下:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/mypage.html</span> HTTP/1.0<br><span class="hljs-attribute">User-Agent</span>: NCSA_Mosaic/2.0 (Windows 3.1)<br><br>200 OK<br><span class="hljs-attribute">Date</span>: Tue, 15 Nov 1994 08:12:31 GMT<br><span class="hljs-attribute">Server</span>: CERN/3.0 libwww/2.17<br><span class="hljs-attribute">Content-Type</span>: text/html<br>&lt;HTML&gt;<br>A page with an image<br>  &lt;IMG SRC=&quot;/myimage.gif&quot;&gt;<br>&lt;/HTML&gt;<br></code></pre></td></tr></table></figure><p>随后发生的请求和响应:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/myimage.gif</span> HTTP/1.0<br><span class="hljs-attribute">User-Agent</span>: NCSA_Mosaic/2.0 (Windows 3.1)<br><br>200 OK<br><span class="hljs-attribute">Date</span>: Tue, 15 Nov 1994 08:12:32 GMT<br><span class="hljs-attribute">Server</span>: CERN/3.0 libwww/2.17<br><span class="hljs-attribute">Content-Type</span>: text/gif<br>(image content)<br></code></pre></td></tr></table></figure><h2 id="HTTP1-1——标准协议"><a href="#HTTP1-1——标准协议" class="headerlink" title="HTTP1.1——标准协议"></a>HTTP1.1——标准协议</h2><p>HTTP1.1提供了许多改进.</p><ul><li>一个连接可以被复用,用于节省时间.在请求资源时,不需要再建立多个连接</li><li>管道化.允许在第一个请求还没有完成传输时发送第二个请求,这个降低了通讯的延迟</li><li>支持大块的响应</li><li>引入了额外的缓存控制机制</li><li>客户端和服务器支持内容协商,包括语言,编码,类型的协商.</li><li>新增了Host头部,使得一个服务器(一个IP)可以拥有不同的域名.</li></ul><p>一个典型的HTTP1.1请求示例,所有的请求都通过一个TCP连接:</p><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs http"><span class="hljs-keyword">GET</span> <span class="hljs-string">/en-US/docs/Glossary/Simple_header</span> HTTP/1.1<br><span class="hljs-attribute">Host</span>: developer.mozilla.org<br><span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:50.0) Gecko/20100101 Firefox/50.0<br><span class="hljs-attribute">Accept</span>: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8<br><span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5<br><span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate, br<br><span class="hljs-attribute">Referer</span>: https://developer.mozilla.org/en-US/docs/Glossary/Simple_header<br><br>200 OK<br><span class="hljs-attribute">Connection</span>: Keep-Alive<br><span class="hljs-attribute">Content-Encoding</span>: gzip<br><span class="hljs-attribute">Content-Type</span>: text/html; charset=utf-8<br><span class="hljs-attribute">Date</span>: Wed, 20 Jul 2016 10:55:30 GMT<br><span class="hljs-attribute">Etag</span>: &quot;547fa7e369ef56031dd3bff2ace9fc0832eb251a&quot;<br><span class="hljs-attribute">Keep-Alive</span>: timeout=5, max=1000<br><span class="hljs-attribute">Last-Modified</span>: Tue, 19 Jul 2016 00:59:33 GMT<br><span class="hljs-attribute">Server</span>: Apache<br><span class="hljs-attribute">Transfer-Encoding</span>: chunked<br><span class="hljs-attribute">Vary</span>: Cookie, Accept-Encoding<br><br>(content)<br><br><span class="hljs-keyword">GET</span> <span class="hljs-string">/static/img/header-background.png</span> HTTP/1.1<br><span class="hljs-attribute">Host</span>: developer.mozilla.org<br><span class="hljs-attribute">User-Agent</span>: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:50.0) Gecko/20100101 Firefox/50.0<br><span class="hljs-attribute">Accept</span>: */*<br><span class="hljs-attribute">Accept-Language</span>: en-US,en;q=0.5<br><span class="hljs-attribute">Accept-Encoding</span>: gzip, deflate, br<br><span class="hljs-attribute">Referer</span>: https://developer.mozilla.org/en-US/docs/Glossary/Simple_header<br><br>200 OK<br><span class="hljs-attribute">Age</span>: 9578461<br><span class="hljs-attribute">Cache-Control</span>: public, max-age=315360000<br><span class="hljs-attribute">Connection</span>: keep-alive<br><span class="hljs-attribute">Content-Length</span>: 3077<br><span class="hljs-attribute">Content-Type</span>: image/png<br><span class="hljs-attribute">Date</span>: Thu, 31 Mar 2016 13:34:46 GMT<br><span class="hljs-attribute">Last-Modified</span>: Wed, 21 Oct 2015 18:27:50 GMT<br><span class="hljs-attribute">Server</span>: Apache<br><br>(image content of 3077 bytes)<br></code></pre></td></tr></table></figure><h2 id="HTTPS"><a href="#HTTPS" class="headerlink" title="HTTPS"></a>HTTPS</h2><p>1994年网景公司在TCP/IP栈上的顶部创造了一个额外的加密层——SSL.SSL1.0没有公开,而SSL2.0和它的后继者SSL3.0用于电子商务网站的建立.HTTPS加密信息,保证它们在客户和服务器之间的真实性,SSL最终标准化并演变成了TLS.随后,由于互联网的普及性,HTTPS不再只用于电子商务场景中,比如用于私人信息的保护,比如电话簿,用户位置,邮箱等.</p><h2 id="HTTP2-0——用于提升性能"><a href="#HTTP2-0——用于提升性能" class="headerlink" title="HTTP2.0——用于提升性能"></a>HTTP2.0——用于提升性能</h2><p>HTTP2.0和HTTP1.1的不同之处:</p><ul><li>HTTP2.0是一个二进制协议而不是文本协议.它不可以被手动读取和创造.它允许优化提升技术的实现</li><li>HTTP2.0是一个多路复用协议.并行请求可以在同一个连接上被创建.</li><li>HTTP2.0进行了头部压缩.由于一些请求经常发送一些相同的头部信息,这个特性减少了传输重复数据的开销</li><li>HTTP2.0允许服务器推送数据到客户端客户端缓存.</li></ul><h2 id="HTTP3-0——在QUIC上的HTTP"><a href="#HTTP3-0——在QUIC上的HTTP" class="headerlink" title="HTTP3.0——在QUIC上的HTTP"></a>HTTP3.0——在QUIC上的HTTP</h2><p>下一个主要的HTTP版本,HTTP3与早期的HTTP有相同的语义,但是使用QUIC代替TCP来做运输层传输.QUIC使得HTTP连接拥有更低的延迟,和HTTP2一样,它是一个多路复用协议,但是HTTP2运行在单个TCP连接上,因此包丢失检测和重传处理可能阻塞连接上的所有流.而QUIC运行多个流在UDP之上,并且为每个流实现了单独的包丢失检测和重传,一旦错误发生,只有发生错误的流的数据包会发生阻塞.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Evolution_of_HTTP">https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Evolution_of_HTTP</a></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>计算机网络</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>计算机网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>TCP连接管理</title>
     <link href="/2023/04/25/TCP%E8%BF%9E%E6%8E%A5%E7%AE%A1%E7%90%86/"/>
     <url>/2023/04/25/TCP%E8%BF%9E%E6%8E%A5%E7%AE%A1%E7%90%86/</url>
@@ -259,6 +184,31 @@
     <tags>
       
       <tag>计算机网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>页分裂和页合并</title>
+    <link href="/2023/04/12/%E9%A1%B5%E5%88%86%E8%A3%82%E5%92%8C%E9%A1%B5%E5%90%88%E5%B9%B6/"/>
+    <url>/2023/04/12/%E9%A1%B5%E5%88%86%E8%A3%82%E5%92%8C%E9%A1%B5%E5%90%88%E5%B9%B6/</url>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="mysql表数据组成"><a href="#mysql表数据组成" class="headerlink" title="mysql表数据组成"></a>mysql表数据组成</h2><p>一个表通常由一个.ibd文件所表示,一个文件又由N个段组成,每个段关联一个索引.一个段又由多个区组成,而每个区又由多个页组成,默认情况下,区的大小为1MB,页的大小为16KB,一个区中最多可以存放64个页.一个页至少需要存放两行数据,因此页中的行数据的长度最长为8KB,而每行数据有多大,由表的模式所决定,通常表的模式又由一个.frm文件所表示.一张图片可以更形象的表达一些概念:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933413169-ac3a5f8e-61bd-4ad1-8836-50692a4d038c.png" alt="img"></p><h2 id="页的组成"><a href="#页的组成" class="headerlink" title="页的组成"></a>页的组成</h2><p>Mysql中操作数据的最小单位不是行,而是页,这意味着Mysql不会单独从磁盘上查询一行记录,而是至少查到一个页,然后从中获取行记录.在主键索引的叶子节点中,数据将按照主键大小按顺序存放在页中,页和页之间通过双向链表进行连接,这也就意味着在物理上相邻的两个页不一定是按顺序的.我们所讨论的页分裂和页合并中的”页”具体指的就是主键索引的叶子节点.</p><h2 id="页的内部"><a href="#页的内部" class="headerlink" title="页的内部"></a>页的内部</h2><p>一个具体的页的样子如下图,主键ID依次为1,2,3,4,通常页中有一个50%的阈值用于合并操作,也就是页大小的一半.</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899508328-48745c0e-41f7-4d12-b5e9-295099bc6137.png" alt="img"></p><p>数据将按顺序插入页中:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933887707-a0dabc90-ea98-4959-8ea9-f46f07f93418.png" alt="img"></p><p>如果数据无法存放在当前页,那么将存放在下一个页中</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1705933959403-8d86ad3c-0a3f-4beb-a79e-3078a2af470a.png" alt="img"></p><h2 id="页合并"><a href="#页合并" class="headerlink" title="页合并"></a>页合并</h2><p>如果页中的数据被删除,那么实际上这块的空间并不会被回收,而是标记为可重复利用.当一个页的数据被删除或者更新,空间小于所规定的阈值大小,那么Mysql会查找前一个页,和后一个页,判断是否可以将这个页合并到另外一个页,这样就可以节省下一个页的空间.以下是Page5和Page6的一个合并过程:</p><ol><li>Page5的一些数据被删除,并且空间降到了阈值之下</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899710734-d9bbd9e2-432b-4d95-b159-e83ed11cd5f8.png" alt="img"></p><ol><li>Page5的下一个页Page6的数据此时不到一半,并且这些数据可以放入Page5</li></ol><h2 id=""><a href="#" class="headerlink" title=""></a><img src="https://cdn.nlark.com/yuque/0/2023/png/22278782/1697899842787-6a83fef1-da67-496f-83e8-872a802812f2.png" alt="img"></h2><ol><li>进行页合并操作</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899897659-7c0c55a9-7555-42cd-8466-5ddf30c1257f.png" alt="img"></p><ol><li>Page6变成了空页,用于存放新的数据</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697899974126-ded6a603-8052-41b6-8456-7d2a2e2c6196.png" alt="img"></p><h2 id="页分裂"><a href="#页分裂" class="headerlink" title="页分裂"></a>页分裂</h2><p>如果一个页快满了,此时我们插入数据,但下一个页的空间也全部占满.这个时候Mysql将创建一个新页,然后将快满的这个页的部分数据迁移到新页中,这部分数据就是超出原来那个页阈值的那部分数据,之后再插入新的数据.以下是一个页分裂过程:</p><ol><li>往Page10插入数据,但此时该页已没有空间可以容纳</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900364335-2f8d0db7-59bf-4317-918a-044ff71faa06.png" alt="img"></p><ol><li>Page10的下一个页Page11也没有空间可以容纳,并且27这个数据是要插入到28之前的.</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900393905-7e7a8451-6c7b-4e95-908c-88096f272514.png" alt="img"></p><ol><li>此时创建一个新页Page12,将Page10的24-26号数据迁移到新页,并插入27</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900503279-f3d04b9c-015f-4389-b5ec-f6c8e3980684.png" alt="img"></p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697900462918-31189d4e-2232-4e88-aba1-76af0cd091b2.png" alt="img"></p><ol><li>修改页之间的链接关系,Page10的下一个页此时是Page12而不是Page11,因此页并不是物理连续的,而是逻辑连续的.两个相邻的页可能存放在不同的区中.</li></ol><h2 id="索引设计带来的影响"><a href="#索引设计带来的影响" class="headerlink" title="索引设计带来的影响"></a>索引设计带来的影响</h2><p>假如我们有个主键,如果我们使用自增id,那么产生的页分裂和页合并会比较少,但是如果我们使用无规则的id,那么大概率会使得整个数据分布得很稀疏,进而给性能带来以下影响:</p><ul><li>使用了更多的页,浪费更多的磁盘空间</li><li>数据分布在很多稀疏的页中,加载页也需要CPU时间,那么可能导致获取数据时间变长</li><li>页合并和页分裂进行过程会带来性能影响</li></ul><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://www.percona.com/blog/innodb-page-merging-and-page-splitting/">https://www.percona.com/blog/innodb-page-merging-and-page-splitting/</a></p>]]></content>
+    
+    
+    <categories>
+      
+      <category>mysql</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>mysql</tag>
       
     </tags>
     
@@ -467,6 +417,31 @@
   
   
   <entry>
+    <title>TCP拥塞控制</title>
+    <link href="/2022/04/05/tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/"/>
+    <url>/2022/04/05/tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/</url>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="为什么会发生拥塞"><a href="#为什么会发生拥塞" class="headerlink" title="为什么会发生拥塞"></a>为什么会发生拥塞</h2><ul><li>不同连接会共享网络上的路由器,路由器的传输能力有限,导致传输的数据包不得不在链路中排队.</li><li>一条链路上有多个路由器,由于某个连接抢占了中间的某个路由器的容量,可能会导致其它连接的数据包在中途某个路由器中丢失,进而引起重传,引起拥塞.</li><li>数据包并没有被丢弃,主机在一定时间内没有收到ACK,进行数据包的重传,导致链路变得拥塞.这种情况称为过早超时.</li></ul><h2 id="如何感知拥塞"><a href="#如何感知拥塞" class="headerlink" title="如何感知拥塞"></a>如何感知拥塞</h2><ol><li>链路拥塞:丢失事件(超时或者接收到三个重复的ACK)暗示拥塞,发送者应该限制发送速率.</li><li>链路不拥塞:收到ACK暗示着数据包正确到达目的,发送者应该加快发送速率.</li></ol><h2 id="TCP如何限制发送速率"><a href="#TCP如何限制发送速率" class="headerlink" title="TCP如何限制发送速率"></a>TCP如何限制发送速率</h2><p>使用拥塞窗口cwnd,发送速率限制的公式如下:LastByteSent – LastByteAcked 应该小于等于 min{cwnd, rwnd}</p><h3 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h3><p>1.慢开始.一开始发送1个MSS,如果正确收到ACK,则进行加倍,发送2个MSS,4个MSS,以此类推.当发生超时事件时,设置一个叫ssthresh的值,等于cwnd的一半,并且重新一轮新的慢开始阶段,如果到达ssthresh,则结束慢开始阶段,进入拥塞避免阶段.另外,如果不是超时,而是收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口先减半,然后加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p><p>2.拥塞避免.正确收到一个ACK后,每次只增加一个MSS.如果发生超时事件,让ssthresh的值等于cwnd的一半,重新进入慢开始阶段.另外,如果收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p><p>如图所示:</p><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1693033291970-b812fa61-9979-4824-91fa-5fd3cecebd98.png" alt="img"></p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul><li>计算机网络自顶向下方法3.6.1  The Causes and the Costs of Congestion  3.7.1  Classic TCP Congestion Control  </li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>计算机网络</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>计算机网络</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Redis分布式锁</title>
     <link href="/2021/06/21/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/"/>
     <url>/2021/06/21/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
@@ -559,6 +534,31 @@
     <tags>
       
       <tag>方案设计</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Java equals和hashCode方法规范</title>
+    <link href="/2021/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/"/>
+    <url>/2021/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/</url>
+    
+    <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="什么时候要重写equals方法"><a href="#什么时候要重写equals方法" class="headerlink" title="什么时候要重写equals方法"></a>什么时候要重写equals方法</h2><p>只当真正需要为对象提供”逻辑相等性”时才重写equals方法</p><h2 id="equals方法需要遵守的通用约定"><a href="#equals方法需要遵守的通用约定" class="headerlink" title="equals方法需要遵守的通用约定"></a>equals方法需要遵守的通用约定</h2><ol><li>反射性.非空的x引用调用x.equals(x)返回true</li><li>对称性.非空的x引用调用x.equals(y)返回true时,y.equals(x)也应该返回true</li><li>传递性.非空的x,y,z引用调用x.equals(y)返回true,调用y.equals(z)返回true,那么x.equals(z)也应该返回true</li><li>一致性.非空的x,y引用调用x.equals(y)返回true,那么调用多次也应该返回true</li><li>非空的x,调用x.equals(null)应该返回false</li></ol><h2 id="如何编写一个正确的equals方法"><a href="#如何编写一个正确的equals方法" class="headerlink" title="如何编写一个正确的equals方法"></a>如何编写一个正确的equals方法</h2><ol><li><p>使用==判断两个对象是否是同一个引用,如果是,返回true,这一步是一种优化</p></li><li><p>使用 instanceof 判断传入的对象是否是正确的类型,如果不是,返回false</p></li><li><p>对传入的对象进行转型,由于我们第2步进行了instanceof判断,这次转型是安全的</p></li><li><p>比较满足”逻辑性相等”所需要的字段,如果这些字段都相等,那么返回true.</p></li><li><ol><li>对于非float和double类型的基本类型变量,使用==进行比较</li><li>对于对象引用,使用对应的equals方法进行比较,一些对象引用可能为空,那么应该使用Objects.equals()方法进行比较</li><li>对于float字段,使用静态的 Float.compare(float, float)进行比较.</li><li>对于double字段, 使用静态的Double.compare(double, double)进行比较.</li><li>对于数组元素,根据元素的类型按照上面的规则进行比较,如果每个元素都需要比较,那么使用Arrays.equals()方法进行比较</li></ol></li></ol><h3 id="性能优化"><a href="#性能优化" class="headerlink" title="性能优化"></a>性能优化</h3><ol><li>如果某个字段更可能不同,那么应该提前判断,这样可能可以提前返回false.</li><li>如果某个字段判断的代价更低,也应该提前判断,这样可能可以提前返回false.</li><li>如果有某个由其他字段计算出来的字段(这个字段仅仅作为性能优化判断使用,这个字段不参与equals逻辑性相等比较),那么先判断这个字段是否相等,这样可能可以提前返回false.比如一个多边形有边和长,如果面积不相等,那么就不需要再判断边和长了</li></ol><h2 id="重写equals需要重写hashCode方法"><a href="#重写equals需要重写hashCode方法" class="headerlink" title="重写equals需要重写hashCode方法"></a>重写equals需要重写hashCode方法</h2><p>根据hashCode约定,重写equals方法必须重写hashCode方法如果</p><h3 id="HashCode方法规范"><a href="#HashCode方法规范" class="headerlink" title="HashCode方法规范"></a>HashCode方法规范</h3><ol><li>当一个应用的对象的hashCode方法被反复调用时,且对象没有进行任何修改,那么hashCode应该不变</li><li>如果x.equals(y)方法返回true,那么x和y的hashCode必须相等</li><li>如果x.equals(y)方法返回false,那么x和y的hashCode不一定要相等.但是最好使其不相等,这样可以使得在HashMap等数据结构中提升性能</li></ol><h2 id="为什么重写equals要重写hashCode"><a href="#为什么重写equals要重写hashCode" class="headerlink" title="为什么重写equals要重写hashCode"></a>为什么重写equals要重写hashCode</h2><p>如果equals方法相同,hashcode不同,那么使用类似于HashMap的集合类时,那么可能将原本相同的对象Hash到不同一个桶位置,这样再次检索两个”逻辑相等”的对象就检索不到.即使hash到同一个桶中,由于在HashMap中做了优化,如果两个元素的hash值不同,那么就认为是不相等的对象.</p><h2 id="如何写一个正确的HashCode方法"><a href="#如何写一个正确的HashCode方法" class="headerlink" title="如何写一个正确的HashCode方法"></a>如何写一个正确的HashCode方法</h2><h3 id="目的"><a href="#目的" class="headerlink" title="目的"></a>目的</h3><p>一个好的哈希函数趋向于让不相等的对象返回不同的hash code,并且尽可能使其在哈希表等集合框架类中保证其数据的分散性.</p><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol><li><p>为字段计算哈希值</p></li><li><ol><li>如果字段是基础类型,那么使用对应的包装类的hashCode方法来获取哈希值</li><li>如果字段是对象引用,如果字段为null,那么通常认为哈希值为0,如果该字段对应的对象的equals方法中又递归的判断了其它字段,那么就递归调用该对象的hashCode方法.</li><li>如果字段是一个数组,对数组的每个元素计算哈希值.如果不需要数组里的元素参与计算,那么最好返回一个不是0的常数.如果所有的元素需要参与计算,那么使用Arrays.hashCode方法</li></ol></li><li><p>第一个字段的哈希值为result,那么从第二个字段开始的哈希值称为c,那么result=result * 31 +  c,依次累加</p></li></ol><h3 id="技巧"><a href="#技巧" class="headerlink" title="技巧"></a>技巧</h3><p>通常来说,euqals方法哪些字段参与比较,hashCode方法就哪些字段去计算哈希值</p><h3 id="性能优化-1"><a href="#性能优化-1" class="headerlink" title="性能优化"></a>性能优化</h3><p>如果一个对象是不可变的,那么可以考虑将hash值缓存起来</p><h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><p>对equals方法和hashCode方法需要注意基本的规则,但大多数工具类都可以为我们生成这个两个方法,所以实际上对于如何写正确的equals方法和hashCode方法一般很少实践.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul><li>effective java item 10  Obey the general contract when overriding equalsObey the g eneral contract</li><li>effective java item 11 Always override hashCode when you override equals</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>java基础</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>java基础</tag>
       
     </tags>
     

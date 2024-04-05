@@ -15,28 +15,12 @@
   
   <meta name="theme-color" content="#2f4154">
   <meta name="description" content="">
-  <meta name="author" content="君霖">
+  <meta name="author" content="DreamLin">
   <meta name="keywords" content="">
   
-  <title>TCP拥塞控制 - DreamLin&#39;s blog</title>
+  <title>归档 - DreamLin&#39;s blog</title>
 
   <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
-
-
-  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
-  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
-
-  
-    
-    
-      
-      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/github-gist.min.css" />
-    
-  
-
-  
-    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
-  
 
 
 
@@ -65,7 +49,7 @@
 
 
 <body>
-  <header style="height: 70vh;">
+  <header style="height: 60vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -164,54 +148,9 @@
       <div class="full-bg-img">
         <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
           <div class="page-header text-center fade-in-up">
-            <span class="h2" id="subtitle" title="TCP拥塞控制">
+            <span class="h2" id="subtitle" title="归档">
               
             </span>
-
-            
-              <div class="mt-3">
-  
-  
-    <span class="post-meta">
-      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-      <time datetime="2024-04-05 16:05" pubdate>
-        2024年4月5日 下午
-      </time>
-    </span>
-  
-</div>
-
-<div class="mt-1">
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-chart"></i>
-      604 字
-    </span>
-  
-
-  
-    
-    <span class="post-meta mr-2">
-      <i class="iconfont icon-clock-fill"></i>
-      
-      
-      6
-       分钟
-    </span>
-  
-
-  
-  
-    
-      <!-- LeanCloud 统计文章PV -->
-      <span id="leancloud-page-views-container" class="post-meta" style="display: none">
-        <i class="iconfont icon-eye" aria-hidden="true"></i>
-        <span id="leancloud-page-views"></span> 次
-      </span>
-    
-  
-</div>
 
             
           </div>
@@ -224,144 +163,40 @@
 
   <main>
     
+      <div class="container nopadding-x-md">
+        <div class="py-5" id="board"
+          >
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+<div class="list-group">
+  <p class="h4">共计 23 篇文章</p>
+  <hr>
+  
+  
+    
       
+      <p class="h5">2022</p>
+    
+    <a href="/2022/04/05/tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/" class="list-group-item list-group-item-action">
+      <span class="archive-post-title">TCP拥塞控制</span>
+      <time style="float: right;">04-05</time>
+    </a>
+  
+</div>
 
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="d-none d-lg-block col-lg-2"></div>
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div class="py-5" id="board">
-          <article class="post-content mx-auto">
-            <!-- SEO header -->
-            <h1 style="display: none">TCP拥塞控制</h1>
-            
-            <div class="markdown-body">
-              <hr>
-<h2 id="为什么会发生拥塞"><a href="#为什么会发生拥塞" class="headerlink" title="为什么会发生拥塞"></a>为什么会发生拥塞</h2><ul>
-<li>不同连接会共享网络上的路由器,路由器的传输能力有限,导致传输的数据包不得不在链路中排队.</li>
-<li>一条链路上有多个路由器,由于某个连接抢占了中间的某个路由器的容量,可能会导致其它连接的数据包在中途某个路由器中丢失,进而引起重传,引起拥塞.</li>
-<li>数据包并没有被丢弃,主机在一定时间内没有收到ACK,进行数据包的重传,导致链路变得拥塞.这种情况称为过早超时.</li>
-</ul>
-<h2 id="如何感知拥塞"><a href="#如何感知拥塞" class="headerlink" title="如何感知拥塞"></a>如何感知拥塞</h2><ol>
-<li>链路拥塞:丢失事件(超时或者接收到三个重复的ACK)暗示拥塞,发送者应该限制发送速率.</li>
-<li>链路不拥塞:收到ACK暗示着数据包正确到达目的,发送者应该加快发送速率.</li>
-</ol>
-<h2 id="TCP如何限制发送速率"><a href="#TCP如何限制发送速率" class="headerlink" title="TCP如何限制发送速率"></a>TCP如何限制发送速率</h2><p>使用拥塞窗口cwnd,发送速率限制的公式如下:LastByteSent – LastByteAcked 应该小于等于 min{cwnd, rwnd}</p>
-<h3 id="具体实现"><a href="#具体实现" class="headerlink" title="具体实现"></a>具体实现</h3><p>1.慢开始.一开始发送1个MSS,如果正确收到ACK,则进行加倍,发送2个MSS,4个MSS,以此类推.当发生超时事件时,设置一个叫ssthresh的值,等于cwnd的一半,并且重新一轮新的慢开始阶段,如果到达ssthresh,则结束慢开始阶段,进入拥塞避免阶段.另外,如果不是超时,而是收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口先减半,然后加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p>
-<p>2.拥塞避免.正确收到一个ACK后,每次只增加一个MSS.如果发生超时事件,让ssthresh的值等于cwnd的一半,重新进入慢开始阶段.另外,如果收到3个重复的ACK,对于早期的Tahoe算法,如果收到3个重复的ACK,则重新进入慢开始阶段.对于Reno算法,则会让此时的ssthresh窗口加上3个MSS后继续线性增加,这个过程也叫做快恢复.</p>
-<p>如图所示:</p>
-<p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1693033291970-b812fa61-9979-4824-91fa-5fd3cecebd98.png" srcset="/img/loading.gif" lazyload alt="img"></p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
-<li>计算机网络自顶向下方法3.6.1  The Causes and the Costs of Congestion  3.7.1  Classic TCP Congestion Control  </li>
-</ul>
 
-            </div>
-            <hr>
-            <div>
-              <div class="post-metas mb-3">
-                
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
-                    
-                  </div>
-                
-                
-                  <div class="post-meta">
-                    <i class="iconfont icon-tags"></i>
-                    
-                      <a class="hover-with-bg" href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/">计算机网络</a>
-                    
-                  </div>
-                
+
+
+
               </div>
-              
-                <p class="note note-warning">
-                  
-                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
-                  
-                </p>
-              
-              
-                <div class="post-prevnext">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2024/04/05/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">HTTP的演变.md</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2024/04/05/Java%20equals%E5%92%8ChashCode%E6%96%B9%E6%B3%95%E8%A7%84%E8%8C%83/">
-                        <span class="hidden-mobile">Java equals和hashCode方法规范</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
             </div>
-
-            
-              <!-- Comments -->
-              <article class="comments" id="comments" lazyload>
-                
-                  
-                
-                
-  <div id="valine"></div>
-  <script type="text/javascript">
-    Fluid.utils.loadComments('#valine', function() {
-      Fluid.utils.createScript('https://cdn.jsdelivr.net/npm/valine@1.4.14/dist/Valine.min.js', function () {
-        new Valine({
-          el: "#valine",
-          app_id: "UhRMzm4UBwjZ39Tb3jiGMw50-gzGzoHsz",
-          app_key: "NSDo7qYLV7ycIWFGVYfFbCln",
-          placeholder: "说点什么",
-          path: window.location.pathname,
-          avatar: "retro",
-          meta: ["nick","mail","link"],
-          pageSize: "10",
-          lang: "zh-CN",
-          highlight: false,
-          recordIP: false,
-          serverURLs: "https://uhrmzm4u.lc-cn-n1-shared.com",
-        });
-      });
-    });
-  </script>
-  <noscript>Please enable JavaScript to view the comments</noscript>
-
-
-              </article>
-            
-          </article>
+          </div>
         </div>
       </div>
-    </div>
-    
-      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
-        <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-      </div>
-    
-  </div>
-</div>
-
-<!-- Custom -->
-
-
     
 
     
@@ -466,15 +301,9 @@
 
 
 
-  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.2/dist/tocbot.min.js" ></script>
 
 
 
-  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
-
-
-
-  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
 
 
 
@@ -520,13 +349,6 @@
 
 
 
-
-  <script  src="https://cdn.jsdelivr.net/npm/mermaid@8.9.2/dist/mermaid.min.js" ></script>
-  <script>
-    if (window.mermaid) {
-      mermaid.initialize({"theme":"default"});
-    }
-  </script>
 
 
 
