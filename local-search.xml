@@ -11,6 +11,18 @@
     <content type="html"><![CDATA[<link rel="stylesheet" class="aplayer-secondary-style-marker" href="\assets\css\APlayer.min.css"><script src="\assets\js\APlayer.min.js" class="aplayer-secondary-script-marker"></script><hr><h2 id="为什么要有CDN"><a href="#为什么要有CDN" class="headerlink" title="为什么要有CDN"></a>为什么要有CDN</h2><p>如果没有CDN,那么视频将直接存储在数据中心中.这将带来三个问题:</p><ol><li>数据中心如果离用户过远,那么中间必然会经过很多链路,如果某个链路的传输速率小于视频消费速率,那么整体的视频消费速率就会下降.</li><li>数据中心不得不重复发送一些热点视频,这样浪费带宽,并且这些视频的发送需要向ISP进行付费.</li><li>数据中心可能会出现单点故障问题.</li></ol><h2 id="CDN部署策略"><a href="#CDN部署策略" class="headerlink" title="CDN部署策略"></a>CDN部署策略</h2><ol><li>Enter Deep.部署CDN集群到ISP的访问网络,目的是更加靠近用户,因此可以减少链路和路由器的数量,最终降低用户感知的延迟,提升吞吐量.这种部署方式由于采用的是高度分布式设计,因此维护和管理集群的任务比较有挑战性</li><li>Bring Home.将CDN放置在互联网交换点中(IXP),这种部署方式对于用户的延迟会比较高,吞吐量也会降低,但是维护和管理的开销也会比较低</li></ol><h2 id="CDN数据拉取方式"><a href="#CDN数据拉取方式" class="headerlink" title="CDN数据拉取方式"></a>CDN数据拉取方式</h2><p>每个CDN存储的数据基本都不一样,因为有些数据对于其它地区来说不是热门数据,CDN使用的是简单的拉取策略,如果一个客户从CDN中没有获取到数据,那么这个CDN将会从数据中心或者集群中的其他CDN中获取,并且将数据缓存到本地,如果数据满了,将会删除掉最不经常请求的数据.</p><h2 id="CDN原理"><a href="#CDN原理" class="headerlink" title="CDN原理"></a>CDN原理</h2><p>通常CDN利用DNS来拦截和重定向用户请求,一个典型的流程如下:</p><ol><li>客户浏览某个网站,比如<a href="http://www.douyin.com/">www.douyin.com</a></li><li>客户请求某个视频,比如视频地址是<a href="http://www.vedio.douyin.com/7A8W,%E6%AD%A4%E6%97%B6%E7%94%A8%E6%88%B7%E4%B8%BB%E6%9C%BA%E5%90%91%E5%85%B6%E6%9C%AC%E5%9C%B0DNS%E8%8E%B7%E5%8F%96%E5%9F%9F%E5%90%8D%E5%AF%B9%E5%BA%94%E7%9A%84IP%E5%9C%B0%E5%9D%80">www.vedio.douyin.com/7A8W,此时用户主机向其本地DNS获取域名对应的IP地址</a></li><li>本地DNS服务器请求其域名对应的DNS权威服务器获取IP地址,DNS发现其域名中有”vedio”字符串,此时并不返回一个IP地址,而是返回CDN服务器的域名,例如A1235.cdn.com</li><li>接下去本地DNS将向A1235.cdn.com对应的DNS权威服务器获取对应的IP.此时该DNS服务器通常会查询地理位置数据库来获取离本地DNS服务器最近的CDN服务器的IP地址,然后将IP地址返回给本地DNS服务器</li><li>本地DNS服务器将CDN的IP地址返回给用户主机</li><li>用户主机收到IP地址,向对应CDN请求资源</li></ol><p><img src="https://raw.githubusercontent.com/CodeShowZz/PicGo/master/img1697721310416-42a9ddb4-b76a-40eb-a1a4-8b840d725d47.png" alt="img"></p><h2 id="CDN集群选择策略"><a href="#CDN集群选择策略" class="headerlink" title="CDN集群选择策略"></a>CDN集群选择策略</h2><p>DNS是如何选择集群中的某个CDN的?</p><h3 id="地理就近策略"><a href="#地理就近策略" class="headerlink" title="地理就近策略"></a>地理就近策略</h3><p>通常权威DNS服务器从本地DNS服务器中获取到其IP地址,通过使用商业地理位置数据库获取到离该本地DNS服务器最近的CDN服务器.这种方式对于大部分的用户来说是合理的,但是也存在缺陷.比如:</p><ol><li>地理最靠近的CDN服务器并不是网络路径最短的服务器,</li><li>有可能用户的本地DNS服务器离用户很遥远.</li><li>总是返回同样的CDN服务器给用户,没有考虑网络路径上延迟和可用带宽的变化.</li></ol><p>为了解决这个缺陷.可以采用探测技术,来主动感知CDN到客户之间的延迟,从而为CDN的选择提供数据参考.</p><h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><strong>计算机网络自顶向下方法 2.6.3 Content Distribution Networks</strong></p>]]></content>
     
     
+    <categories>
+      
+      <category>计算机网络</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>计算机网络</tag>
+      
+    </tags>
     
   </entry>
   
@@ -76,14 +88,14 @@
     
     <categories>
       
-      <category>Mysql</category>
+      <category>mysql</category>
       
     </categories>
     
     
     <tags>
       
-      <tag>Mysql</tag>
+      <tag>mysql</tag>
       
     </tags>
     
@@ -117,7 +129,7 @@
   
   
   <entry>
-    <title>HTTP的演变.md</title>
+    <title>HTTP的演变</title>
     <link href="/2023/04/25/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/"/>
     <url>/2023/04/25/HTTP%E7%9A%84%E6%BC%94%E5%8F%98/</url>
     
